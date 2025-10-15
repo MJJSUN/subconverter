@@ -2834,6 +2834,10 @@ void proxyToSingBox(std::vector<Proxy> &nodes, rapidjson::Document &json,
 
   for (Proxy &x : nodes)
   {
+    // Filter out AnyTLS nodes for sing-box as they are not supported
+    if (ext.filter_deprecated && x.Type == ProxyType::AnyTLS)
+      continue;
+
     std::string type = getProxyTypeName(x.Type);
     if (ext.append_proxy_type)
       x.Remark = "[" + type + "] " + x.Remark;
