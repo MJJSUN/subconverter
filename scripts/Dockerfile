@@ -8,7 +8,7 @@ COPY . /workdir
 
 RUN set -xe && \
     apk update && \
-    apk add --no-cache --virtual .build-tools git g++ build-base linux-headers cmake python3 && \
+    apk add --no-cache --virtual .build-tools git g++ build-base linux-headers cmake python3 py3-pip musl-dev && \
     apk add --no-cache --virtual .build-deps curl-dev rapidjson-dev pcre2-dev yaml-cpp-dev openssl-dev zlib-dev && \
     git clone --no-checkout https://github.com/ftk/quickjspp.git && \
     cd quickjspp && \
@@ -47,25 +47,17 @@ RUN set -xe && \
     python3 -m ensurepip && \
     python3 -m pip install --upgrade pip setuptools wheel && \
     python3 -m pip install gitpython && \
-    python3 scripts/update_rules.py -c scripts/rules_config.conf && \
+    python3 scripts/update_rules.py -c scripts/rules_config.conf || echo "⚠️ 忽略规则更新失败" && \
     cmake -DCMAKE_BUILD_TYPE=Release . && \
     make -j $THREADS
 
-# build final image
 FROM alpine:3.16
 LABEL maintainer="tindy.it@gmail.com"
-
 RUN apk add --no-cache --virtual subconverter-deps pcre2 libcurl yaml-cpp
-
 COPY --from=builder /subconverter/subconverter /usr/bin/
 COPY --from=builder /subconverter/base /base/
-
 ENV TZ=Africa/Abidjan
-RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
-RUN echo $TZ > /etc/timezone
-
-# set entry
+RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 WORKDIR /base
 CMD subconverter
-
 EXPOSE 25500/tcp

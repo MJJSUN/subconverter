@@ -519,7 +519,7 @@ static rapidjson::Value transformRuleToSingBox(std::vector<std::string_view> &ar
   {
     // 特殊处理 GEOIP 规则，转换为 rule_set 引用
     rapidjson::Value rule_set(rapidjson::kObjectType);
-    rule_set.AddMember("rule_set", rapidjson::Value(("geoip:" + value).c_str(), allocator), allocator);
+    rule_set.AddMember("rule_set", rapidjson::Value(("geoip-" + toLower(value)).c_str(), allocator), allocator);
     rule_set.AddMember("outbound", rapidjson::Value(group.c_str(), allocator), allocator);
     return rule_set;
   }
@@ -615,9 +615,9 @@ void rulesetToSingBox(rapidjson::Document &base_rule, std::vector<RulesetContent
         std::string country = x.rule_path.substr(x.rule_path.rfind('/') + 1);
         country = country.substr(0, country.length() - 4); // 移除 .srs 后缀
 
-        rule_set.AddMember("tag", rapidjson::Value(("geoip:" + country).c_str(), allocator), allocator);
+        rule_set.AddMember("tag", rapidjson::Value(("geoip-" + toLower(country)).c_str(), allocator), allocator);
         rule_set.AddMember("type", rapidjson::Value("geoip"), allocator);
-        rule_set.AddMember("country", rapidjson::Value(country.c_str(), allocator), allocator);
+        rule_set.AddMember("country", rapidjson::Value(toLower(country).c_str(), allocator), allocator);
       }
       else
       {
