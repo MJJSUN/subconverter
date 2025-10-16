@@ -3242,7 +3242,7 @@ void proxyToSingBox(std::vector<Proxy> &nodes, rapidjson::Document &json,
       }
       proxy.AddMember("tls", tls, allocator);
     }
-    if (!udp.is_undef() && !udp)
+    if (!udp.is_undef() && !udp && x.Type != ProxyType::AnyTLS)
     {
       proxy.AddMember("network", "tcp", allocator);
     }
