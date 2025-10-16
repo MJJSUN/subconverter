@@ -1,0 +1,14 @@
+# 国内IP
+DIRECT,singbox:https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geo/geoip/CN.srs
+
+# 社交应用
+TELEGRAM,singbox:https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geo/geosite/telegram.srs
+TWITTER,singbox:https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geo/geosite/twitter.srs
+
+# 流媒体应用
+NETFLIX,singbox:https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geo/geosite/netflix.srs
+YOUTUBE,singbox:https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geo/geosite/youtube.srs
+
+# 常用网站
+GOOGLE,singbox:https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geo/geosite/google.srs
+GITHUB,singbox:https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geo/geosite/github.srs

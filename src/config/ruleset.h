@@ -5,23 +5,24 @@
 
 enum class RulesetType
 {
-    SurgeRuleset,
-    QuantumultX,
-    ClashDomain,
-    ClashIpCidr,
-    ClashClassic
+  SurgeRuleset,
+  QuantumultX,
+  ClashDomain,
+  ClashIpCidr,
+  ClashClassic,
+  SingBoxRuleset // 添加 sing-box ruleset 类型
 };
 
 struct RulesetConfig
 {
-    String Group;
-    //RulesetType Type = RulesetType::SurgeRuleset;
-    String Url;
-    Integer Interval = 86400;
-    bool operator==(const RulesetConfig &r) const
-    {
-        return Group == r.Group && Url == r.Url && Interval == r.Interval;
-    }
+  String Group;
+  // RulesetType Type = RulesetType::SurgeRuleset;
+  String Url;
+  Integer Interval = 86400;
+  bool operator==(const RulesetConfig &r) const
+  {
+    return Group == r.Group && Url == r.Url && Interval == r.Interval;
+  }
 };
 
 using RulesetConfigs = std::vector<RulesetConfig>;

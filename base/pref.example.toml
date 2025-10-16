@@ -198,6 +198,14 @@ import = "snippets/emoji.toml"
 # [[custom_groups]]
 # name = "LoadBalance"
 # type = "load-balance"
+
+[singbox]
+# 启用 sing-box 规则集功能
+enable_rule_generator = true
+# 覆盖原始规则
+overwrite_original_rules = true
+# sing-box 规则集路径
+ruleset = "snippets/rulesets_singbox.txt"
 # rule = [".*", "[]Proxy", "[]DIRECT"]
 # interval = 100
 # strategy = "consistent-hashing"
