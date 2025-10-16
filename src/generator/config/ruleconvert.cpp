@@ -578,8 +578,8 @@ void rulesetToSingBox(rapidjson::Document &base_rule, std::vector<RulesetContent
       if (base_rule["route"].HasMember("rule_set") && base_rule["route"]["rule_set"].IsArray())
         rule_sets.Swap(base_rule["route"]["rule_set"]);
       // 移除空 rule_set
-      if (rule_sets.Empty() && route.IsObject() && route.HasMember("rule_set"))
-        route.RemoveMember("rule_set");
+      // if (rule_sets.Empty() && route.IsObject() && route.HasMember("rule_set"))
+      //   route.RemoveMember("rule_set");
     }
   }
 
