@@ -515,6 +515,14 @@ static rapidjson::Value transformRuleToSingBox(std::vector<std::string_view> &ar
   {
     rule_obj.AddMember("outbound", rapidjson::Value(value.data(), value.size(), allocator), allocator);
   }
+  else if (type == "geoip")
+  {
+    // 特殊处理 GEOIP 规则，转换为 rule_set 引用
+    rapidjson::Value rule_set(rapidjson::kObjectType);
+    rule_set.AddMember("rule_set", rapidjson::Value(("geoip:" + value).c_str(), allocator), allocator);
+    rule_set.AddMember("outbound", rapidjson::Value(group.c_str(), allocator), allocator);
+    return rule_set;
+  }
   else
   {
     rule_obj.AddMember(rapidjson::Value(type.c_str(), allocator), rapidjson::Value(value.data(), value.size(), allocator), allocator);
@@ -540,6 +548,11 @@ static void appendSingBoxRule(std::vector<std::string_view> &args, rapidjson::Va
 
   auto realType = toLower(std::string(type));
   auto value = toLower(std::string(args[1]));
+
+  // Skip GEOIP rules as they are handled in transformRuleToSingBox
+  if (realType == "geoip")
+    return;
+
   realType = replaceAllDistinct(realType, "-", "_");
   realType = replaceAllDistinct(realType, "ip_cidr6", "ip_cidr");
 
@@ -595,14 +608,29 @@ void rulesetToSingBox(rapidjson::Document &base_rule, std::vector<RulesetContent
     if (endsWith(x.rule_path, ".srs"))
     {
       rapidjson::Value rule_set(rapidjson::kObjectType);
-      rule_set.AddMember("type", rapidjson::Value("remote"), allocator);
-      rule_set.AddMember("tag", rapidjson::Value(rule_group.c_str(), allocator), allocator);
-      rule_set.AddMember("format", rapidjson::Value("binary"), allocator);
-      rule_set.AddMember("url", rapidjson::Value(x.rule_path.c_str(), allocator), allocator);
-      if (x.update_interval > 0)
+
+      // 特殊处理 geoip 规则集
+      if (strFind(x.rule_path, "geoip/"))
       {
-        rule_set.AddMember("download_interval", x.update_interval, allocator);
+        std::string country = x.rule_path.substr(x.rule_path.rfind('/') + 1);
+        country = country.substr(0, country.length() - 4); // 移除 .srs 后缀
+
+        rule_set.AddMember("tag", rapidjson::Value(("geoip:" + country).c_str(), allocator), allocator);
+        rule_set.AddMember("type", rapidjson::Value("geoip"), allocator);
+        rule_set.AddMember("country", rapidjson::Value(country.c_str(), allocator), allocator);
       }
+      else
+      {
+        rule_set.AddMember("tag", rapidjson::Value(rule_group.c_str(), allocator), allocator);
+        rule_set.AddMember("type", rapidjson::Value("remote"), allocator);
+        rule_set.AddMember("format", rapidjson::Value("binary"), allocator);
+        rule_set.AddMember("url", rapidjson::Value(x.rule_path.c_str(), allocator), allocator);
+        if (x.update_interval > 0)
+        {
+          rule_set.AddMember("download_interval", x.update_interval, allocator);
+        }
+      }
+
       rule_sets.PushBack(rule_set, allocator);
       continue;
     }
