@@ -3,13 +3,11 @@ LABEL maintainer="tindy.it@gmail.com"
 ARG THREADS="4"
 ARG SHA=""
 
+# build minimized
 WORKDIR /
-COPY . /workdir
-
 RUN set -xe && \
-    apk update && \
-    apk add --no-cache --virtual .build-tools git g++ build-base linux-headers cmake python3 py3-pip musl-dev && \
-    apk add --no-cache --virtual .build-deps curl-dev rapidjson-dev pcre2-dev yaml-cpp-dev openssl-dev zlib-dev && \
+    apk add --no-cache --virtual .build-tools git g++ build-base linux-headers cmake python3 && \
+    apk add --no-cache --virtual .build-deps curl-dev rapidjson-dev pcre2-dev yaml-cpp-dev && \
     git clone --no-checkout https://github.com/ftk/quickjspp.git && \
     cd quickjspp && \
     git fetch origin 0c00c48895919fc02da3f191a2da06addeb07f09 && \
@@ -39,25 +37,30 @@ RUN set -xe && \
     cmake -DCMAKE_CXX_STANDARD=11 . && \
     make install -j $THREADS && \
     cd .. && \
-    rm -rf subconverter && \
-    mkdir subconverter && \
-    cp -r /workdir/* subconverter/ && \
+    git clone https://github.com/MJJSUN/subconverter --depth=1 && \
     cd subconverter && \
-    [ -n "$SHA" ] && sed -i 's/\(v[0-9]\.[0-9]\.[0-9]\)/\1-'"$SHA"'/' src/version.h; \
+    [ -n "$SHA" ] && sed -i 's/\(v[0-9]\.[0-9]\.[0-9]\)/\1-'"$SHA"'/' src/version.h;\
     python3 -m ensurepip && \
-    python3 -m pip install --upgrade pip setuptools wheel && \
     python3 -m pip install gitpython && \
-    python3 scripts/update_rules.py -c scripts/rules_config.conf || echo "⚠️ 忽略规则更新失败" && \
+    python3 scripts/update_rules.py -c scripts/rules_config.conf && \
     cmake -DCMAKE_BUILD_TYPE=Release . && \
     make -j $THREADS
 
+# build final image
 FROM alpine:3.16
 LABEL maintainer="tindy.it@gmail.com"
+
 RUN apk add --no-cache --virtual subconverter-deps pcre2 libcurl yaml-cpp
+
 COPY --from=builder /subconverter/subconverter /usr/bin/
 COPY --from=builder /subconverter/base /base/
+
 ENV TZ=Africa/Abidjan
-RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
+RUN echo $TZ > /etc/timezone
+
+# set entry
 WORKDIR /base
 CMD subconverter
+
 EXPOSE 25500/tcp
