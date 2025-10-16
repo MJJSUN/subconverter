@@ -121,14 +121,23 @@ namespace toml
           break;
       */
       case "surge-ruleset"_hash:
+        conf.Type = RulesetType::SurgeRuleset;
         conf.Url = "surge:";
         break;
       case "quantumultx"_hash:
+        conf.Type = RulesetType::QuantumultX;
         conf.Url = "quanx:";
         break;
       case "clash-domain"_hash:
+        conf.Type = RulesetType::ClashDomain;
+        conf.Url = type + ":";
+        break;
       case "clash-ipcidr"_hash:
+        conf.Type = RulesetType::ClashIpCidr;
+        conf.Url = type + ":";
+        break;
       case "clash-classic"_hash:
+        conf.Type = RulesetType::ClashClassic;
         conf.Url = type + ":";
         break;
       case "singbox"_hash:
@@ -136,7 +145,7 @@ namespace toml
         conf.Url = "singbox:";
         break;
       default:
-        throw serialization_error(format_error("Ruleset has unsupported type!", v.at("type").location(), "should be one of following: surge-ruleset, quantumultx, clash-domain, clash-ipcidr, clash-classic"), v.at("type").location());
+        throw serialization_error(format_error("Ruleset has unsupported type!", v.at("type").location(), "should be one of following: surge-ruleset, quantumultx, clash-domain, clash-ipcidr, clash-classic, singbox"), v.at("type").location());
       }
       conf.Url += find<String>(v, "ruleset");
       conf.Interval = find_or<Integer>(v, "interval", 86400);

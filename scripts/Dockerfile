@@ -6,8 +6,9 @@ ARG SHA=""
 # build minimized
 WORKDIR /
 RUN set -xe && \
+    apk update && \
     apk add --no-cache --virtual .build-tools git g++ build-base linux-headers cmake python3 && \
-    apk add --no-cache --virtual .build-deps curl-dev rapidjson-dev pcre2-dev yaml-cpp-dev && \
+    apk add --no-cache --virtual .build-deps curl-dev rapidjson-dev pcre2-dev yaml-cpp-dev openssl-dev zlib-dev && \
     git clone --no-checkout https://github.com/ftk/quickjspp.git && \
     cd quickjspp && \
     git fetch origin 0c00c48895919fc02da3f191a2da06addeb07f09 && \
@@ -37,7 +38,9 @@ RUN set -xe && \
     cmake -DCMAKE_CXX_STANDARD=11 . && \
     make install -j $THREADS && \
     cd .. && \
-    git clone https://github.com/MJJSUN/subconverter --depth=1 && \
+    rm -rf subconverter && \
+    cp -r /workdir subconverter && \
+    cd subconverter && \
     cd subconverter && \
     [ -n "$SHA" ] && sed -i 's/\(v[0-9]\.[0-9]\.[0-9]\)/\1-'"$SHA"'/' src/version.h;\
     python3 -m ensurepip && \
