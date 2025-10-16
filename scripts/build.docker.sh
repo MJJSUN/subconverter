@@ -13,4 +13,5 @@ docker buildx build \
 	--build-context workdir="$WORKDIR" \
 	-f scripts/Dockerfile \
 	-t subconverter:latest \
+	--progress=plain \
 	.

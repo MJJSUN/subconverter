@@ -39,8 +39,8 @@ RUN set -xe && \
     make install -j $THREADS && \
     cd .. && \
     rm -rf subconverter && \
-    cp -r /workdir subconverter && \
-    cd subconverter && \
+    mkdir subconverter && \
+    cp -r /workdir/* subconverter/ && \
     cd subconverter && \
     [ -n "$SHA" ] && sed -i 's/\(v[0-9]\.[0-9]\.[0-9]\)/\1-'"$SHA"'/' src/version.h;\
     python3 -m ensurepip && \
