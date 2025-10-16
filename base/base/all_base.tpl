@@ -307,16 +307,6 @@ enhanced-mode-by-rule = true
     "rules": [
       {
         "action": "route",
-        "clash_mode": "direct",
-        "server": "dns_direct"
-      },
-      {
-        "action": "route",
-        "clash_mode": "global",
-        "server": "dns_proxy"
-      },
-      {
-        "action": "route",
         "rule_set": "geosite-cn",
         "server": "dns_direct"
       },

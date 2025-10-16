@@ -578,18 +578,18 @@ void rulesetToSingBox(rapidjson::Document &base_rule, std::vector<RulesetContent
       if (base_rule["route"].HasMember("rule_set") && base_rule["route"]["rule_set"].IsArray())
         rule_sets.Swap(base_rule["route"]["rule_set"]);
       // 移除空 rule_set
-      // if (rule_sets.Empty() && route.IsObject() && route.HasMember("rule_set"))
-      //   route.RemoveMember("rule_set");
+      if (base_rule["route"]["rule_set"].Empty())
+        base_rule["route"].RemoveMember("rule_set");
     }
   }
 
-  // if (global.singBoxAddClashModes)
-  // {
-  //   auto direct_object = buildObject(allocator, "clash_mode", "DIRECT", "outbound", "DIRECT");
-  //   auto global_object = buildObject(allocator, "clash_mode", "GLOBAL", "outbound", "GLOBAL");
-  //   rules.PushBack(direct_object, allocator);
-  //   rules.PushBack(global_object, allocator);
-  // }
+  if (global.singBoxAddClashModes)
+  {
+    auto direct_object = buildObject(allocator, "clash_mode", "DIRECT", "outbound", "DIRECT");
+    auto global_object = buildObject(allocator, "clash_mode", "GLOBAL", "outbound", "GLOBAL");
+    rules.PushBack(direct_object, allocator);
+    rules.PushBack(global_object, allocator);
+  }
 
   std::vector<std::string_view> temp(4);
   for (RulesetContent &x : ruleset_content_array)
