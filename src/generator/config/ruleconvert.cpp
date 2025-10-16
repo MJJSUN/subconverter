@@ -585,8 +585,8 @@ void rulesetToSingBox(rapidjson::Document &base_rule, std::vector<RulesetContent
 
   if (global.singBoxAddClashModes)
   {
-    auto direct_object = buildObject(allocator, "clash_mode", "DIRECT", "outbound", "DIRECT");
-    auto global_object = buildObject(allocator, "clash_mode", "GLOBAL", "outbound", "GLOBAL");
+    auto direct_object = buildObject(allocator, "clash_mode", "Direct", "outbound", "DIRECT");
+    auto global_object = buildObject(allocator, "clash_mode", "Global", "outbound", "GLOBAL");
     rules.PushBack(direct_object, allocator);
     rules.PushBack(global_object, allocator);
   }

@@ -2776,8 +2776,8 @@ static void addSingBoxCommonMembers(rapidjson::Value &proxy, const Proxy &x,
                                     rapidjson::MemoryPoolAllocator<> &allocator)
 {
   proxy.AddMember("type", type, allocator);
-  proxy.AddMember("tag", rapidjson::Value(x.Remark.c_str(), allocator), allocator);
-  proxy.AddMember("server", rapidjson::Value(x.Hostname.c_str(), allocator), allocator);
+  proxy.AddMember("tag", rapidjson::StringRef(x.Remark.c_str()), allocator);
+  proxy.AddMember("server", rapidjson::StringRef(x.Hostname.c_str()), allocator);
   proxy.AddMember("server_port", x.Port, allocator);
 }
 
