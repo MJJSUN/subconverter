@@ -3,8 +3,9 @@ LABEL maintainer="tindy.it@gmail.com"
 ARG THREADS="4"
 ARG SHA=""
 
-# build minimized
 WORKDIR /
+COPY . /workdir
+
 RUN set -xe && \
     apk update && \
     apk add --no-cache --virtual .build-tools git g++ build-base linux-headers cmake python3 && \
@@ -42,8 +43,9 @@ RUN set -xe && \
     mkdir subconverter && \
     cp -r /workdir/* subconverter/ && \
     cd subconverter && \
-    [ -n "$SHA" ] && sed -i 's/\(v[0-9]\.[0-9]\.[0-9]\)/\1-'"$SHA"'/' src/version.h;\
+    [ -n "$SHA" ] && sed -i 's/\(v[0-9]\.[0-9]\.[0-9]\)/\1-'"$SHA"'/' src/version.h; \
     python3 -m ensurepip && \
+    python3 -m pip install --upgrade pip setuptools wheel && \
     python3 -m pip install gitpython && \
     python3 scripts/update_rules.py -c scripts/rules_config.conf && \
     cmake -DCMAKE_BUILD_TYPE=Release . && \

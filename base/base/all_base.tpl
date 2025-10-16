@@ -335,30 +335,41 @@ enhanced-mode-by-rule = true
     "strategy": "prefer_ipv4",
     "final": "dns_direct"
   },
-    "inbounds": [
-        {
-            "type": "mixed",
-            "tag": "mixed-in",
-            {% if bool(default(global.singbox.allow_lan, "")) %}
-            "listen": "0.0.0.0",
-            {% else %}
-            "listen": "127.0.0.1",
-            {% endif %}
-            "listen_port": {{ default(global.singbox.mixed_port, "2080") }}
-        },
-        {
-            "type": "tun",
-            "tag": "tun-in",
-            "inet4_address": "172.19.0.1/30",
-            {% if default(request.singbox.ipv6, "") == "1" %}
-            "inet6_address": "fdfe:dcba:9876::1/126",
-            {% endif %}
-            "auto_route": true,
-            "strict_route": true,
-            "stack": "mixed",
-            "sniff": true
+  "inbounds": [
+    {
+      "type": "tun",
+      "tag": "tun-in",
+      "stack": "system",
+      "address": [
+        "172.18.0.1/30",
+        "fdfe:dcba:9876::1/126"
+      ],
+      "mtu": 9000,
+      "auto_route": true,
+      "strict_route": true,
+      "sniff": true,
+      "platform": {
+        "http_proxy": {
+          "enabled": true,
+          "server": "127.0.0.1",
+          "server_port": 1082
         }
-    ],
+      }
+    },
+    {
+      "type": "mixed",
+      "listen": "127.0.0.1",
+      "listen_port": 1082,
+      "sniff": true,
+      "users": []
+    },
+    {
+      "type": "socks",
+      "tag": "socks-in",
+      "listen": "127.0.0.1",
+      "listen_port": 7888
+    }
+  ],
     "outbounds": [],
     "route": {
         "rules": [],
