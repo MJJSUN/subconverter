@@ -303,7 +303,13 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
     tfo.define(x.TCPFastOpen);
     singleproxy["name"] = x.Remark;
     singleproxy["server"] = x.Hostname;
-    singleproxy["port"] = x.Port;
+    
+    // For Hysteria and Hysteria2, only set port if no port range is specified
+    if ((x.Type == ProxyType::Hysteria || x.Type == ProxyType::Hysteria2) && !x.Ports.empty()) {
+      // Don't set port field when ports range is available
+    } else {
+      singleproxy["port"] = x.Port;
+    }
 
     switch (x.Type)
     {

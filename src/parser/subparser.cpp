@@ -49,6 +49,41 @@ std::string removeBrackets(const std::string& input) {
 
     return result;
 }
+
+// Extract first port from port range string (e.g., "50000-60000" -> "50000")
+std::string extractFirstPort(const std::string& ports) {
+    if (ports.empty()) {
+        return "";
+    }
+    
+    // Handle single port
+    if (ports.find('-') == std::string::npos && ports.find(',') == std::string::npos) {
+        return ports;
+    }
+    
+    // Handle port range (e.g., "50000-60000")
+    size_t dash_pos = ports.find('-');
+    if (dash_pos != std::string::npos) {
+        std::string first_port = ports.substr(0, dash_pos);
+        // Validate it's a number
+        if (!first_port.empty() && std::all_of(first_port.begin(), first_port.end(), ::isdigit)) {
+            return first_port;
+        }
+    }
+    
+    // Handle comma-separated ports (e.g., "50000,50001,50002")
+    size_t comma_pos = ports.find(',');
+    if (comma_pos != std::string::npos) {
+        std::string first_port = ports.substr(0, comma_pos);
+        // Validate it's a number
+        if (!first_port.empty() && std::all_of(first_port.begin(), first_port.end(), ::isdigit)) {
+            return first_port;
+        }
+    }
+    
+    return "";
+}
+
 void commonConstruct(Proxy &node, ProxyType type, const std::string &group, const std::string &remarks,
                      const std::string &server, const std::string &port, const tribool &udp, const tribool &tfo,
                      const tribool &scv, const tribool &tls13, const std::string &underlying_proxy) {
@@ -1207,9 +1242,24 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
         singleproxy["port"] >>= port;
         singleproxy["port-range"] >>= ports;
 
-        if (port.empty() || port == "0")
-            if (ports.empty())
+        // Handle special case for Hysteria2 port ranges
+        if (port.empty() || port == "0") {
+            if (ports.empty()) {
                 continue;
+            } else {
+                // Extract first port from port range for Hysteria2
+                if (proxytype == "hysteria2" || proxytype == "hysteria") {
+                    std::string first_port = extractFirstPort(ports);
+                    if (!first_port.empty()) {
+                        port = first_port;
+                    } else {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+            }
+        }
         udp = safe_as<std::string>(singleproxy["udp"]);
         scv = safe_as<std::string>(singleproxy["skip-cert-verify"]);
         switch (hash_(proxytype)) {
@@ -1497,13 +1547,7 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 singleproxy["alpn"][0] >> alpn;
                 singleproxy["alpn"] >> alpnList;
                 singleproxy["protocol"] >> insecure;
-                if (singleproxy["ports"].IsDefined()) {
-                    try {
-                        ports = singleproxy["ports"].as<std::string>();
-                    } catch (const YAML::BadConversion& e) {
-                        // Handle non-string ports field gracefully
-                    }
-                }
+                singleproxy["ports"] >> ports;
                 sni = host;
                 hysteriaConstruct(node, group, ps, server, port, type, auth, "", host, up, down, alpn, obfsParam,
                                   insecure, ports, sni,
@@ -1536,13 +1580,7 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 singleproxy["obfs-password"] >>= obfsPassword;
                 singleproxy["sni"] >>= host;
                 singleproxy["alpn"][0] >>= alpn;
-                if (singleproxy["ports"].IsDefined()) {
-                    try {
-                        ports = singleproxy["ports"].as<std::string>();
-                    } catch (const YAML::BadConversion& e) {
-                        // Handle non-string ports field gracefully
-                    }
-                }
+                singleproxy["ports"] >> ports;
                 sni = host;
                 hysteria2Construct(node, group, ps, server, port, password, host, up, down, alpn, obfsParam,
                                    obfsPassword, sni, public_key, ports, udp, tfo, scv);

@@ -143,4 +143,6 @@ int explodeConf(const std::string &filepath, std::vector<Proxy> &nodes);
 
 int explodeConfContent(const std::string &content, std::vector<Proxy> &nodes);
 
+std::string extractFirstPort(const std::string& ports);
+
 #endif // SUBPARSER_H_INCLUDED
