@@ -1497,7 +1497,13 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 singleproxy["alpn"][0] >> alpn;
                 singleproxy["alpn"] >> alpnList;
                 singleproxy["protocol"] >> insecure;
-                singleproxy["ports"] >> ports;
+                if (singleproxy["ports"].IsDefined()) {
+                    try {
+                        ports = singleproxy["ports"].as<std::string>();
+                    } catch (const YAML::BadConversion& e) {
+                        // Handle non-string ports field gracefully
+                    }
+                }
                 sni = host;
                 hysteriaConstruct(node, group, ps, server, port, type, auth, "", host, up, down, alpn, obfsParam,
                                   insecure, ports, sni,
@@ -1530,7 +1536,13 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 singleproxy["obfs-password"] >>= obfsPassword;
                 singleproxy["sni"] >>= host;
                 singleproxy["alpn"][0] >>= alpn;
-                singleproxy["ports"] >> ports;
+                if (singleproxy["ports"].IsDefined()) {
+                    try {
+                        ports = singleproxy["ports"].as<std::string>();
+                    } catch (const YAML::BadConversion& e) {
+                        // Handle non-string ports field gracefully
+                    }
+                }
                 sni = host;
                 hysteria2Construct(node, group, ps, server, port, password, host, up, down, alpn, obfsParam,
                                    obfsPassword, sni, public_key, ports, udp, tfo, scv);
