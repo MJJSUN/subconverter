@@ -1407,10 +1407,16 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
     {
       if (!hysteria2)
         continue;
-      // For hysteria2, use port range if available, otherwise use single port
-      std::string portStr = ports.empty() ? port : ports;
-      proxyStr = "hysteria2://" + password + "@" + hostname + ":" + portStr + "?insecure=" +
-                 (x.AllowInsecure.get() ? "1" : "0");
+      // For hysteria2, handle port range with mport parameter
+      if (ports.empty()) {
+        // Single port case
+        proxyStr = "hysteria2://" + password + "@" + hostname + ":" + port + "?insecure=" +
+                   (x.AllowInsecure.get() ? "1" : "0");
+      } else {
+        // Port range case - use mport parameter
+        proxyStr = "hysteria2://" + password + "@" + hostname + "?mport=" + ports + "&insecure=" +
+                   (x.AllowInsecure.get() ? "1" : "0");
+      }
       if (!obfsparam.empty())
       {
         proxyStr += "&obfs=" + obfsparam;
