@@ -3084,7 +3084,10 @@ void proxyToSingBox(std::vector<Proxy> &nodes, rapidjson::Document &json,
       
       // Handle port range for SingBox
       if (!x.Ports.empty()) {
-        proxy.AddMember("server_ports", rapidjson::StringRef(x.Ports.c_str()), allocator);
+        // Convert port range format from "50000-60000" to "50000:60000" for SingBox
+        std::string singboxPorts = x.Ports;
+        std::replace(singboxPorts.begin(), singboxPorts.end(), '-', ':');
+        proxy.AddMember("server_ports", rapidjson::Value(singboxPorts.c_str(), allocator), allocator);
         // Remove the server_port field when server_ports is used
         proxy.RemoveMember("server_port");
       }
