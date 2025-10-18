@@ -1258,7 +1258,12 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
         singleproxy["name"] >>= ps;
         singleproxy["server"] >>= server;
         singleproxy["port"] >>= port;
-        singleproxy["port-range"] >>= ports;
+        // Try both "ports" and "port-range" fields for compatibility
+        if (singleproxy["ports"].IsDefined()) {
+            singleproxy["ports"] >>= ports;
+        } else {
+            singleproxy["port-range"] >>= ports;
+        }
 
         // Skip nodes without any port information
         if (port.empty() && ports.empty()) {
