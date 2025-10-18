@@ -1404,6 +1404,7 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
                                                      tlssecure ? "tls" : ""));
       break;
     case ProxyType::Hysteria2:
+    {
       if (!hysteria2)
         continue;
       // For hysteria2, use port range if available, otherwise use single port
@@ -1424,6 +1425,7 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
       }
       proxyStr += "#" + urlEncode(remark);
       break;
+    }
     case ProxyType::VLESS:
       if (!vless)
         continue;
