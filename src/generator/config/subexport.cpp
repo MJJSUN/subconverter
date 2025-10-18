@@ -1406,7 +1406,9 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
     case ProxyType::Hysteria2:
       if (!hysteria2)
         continue;
-      proxyStr = "hysteria2://" + password + "@" + hostname + ":" + port + (ports.empty() ? "" : "," + ports) + "?insecure=" +
+      // For hysteria2, use port range if available, otherwise use single port
+      std::string portStr = ports.empty() ? port : ports;
+      proxyStr = "hysteria2://" + password + "@" + hostname + ":" + portStr + "?insecure=" +
                  (x.AllowInsecure.get() ? "1" : "0");
       if (!obfsparam.empty())
       {
@@ -3077,6 +3079,14 @@ void proxyToSingBox(std::vector<Proxy> &nodes, rapidjson::Document &json,
     case ProxyType::Hysteria2:
     {
       addSingBoxCommonMembers(proxy, x, "hysteria2", allocator);
+      
+      // Handle port range for SingBox
+      if (!x.Ports.empty()) {
+        proxy.AddMember("server_ports", rapidjson::StringRef(x.Ports.c_str()), allocator);
+        // Remove the server_port field when server_ports is used
+        proxy.RemoveMember("server_port");
+      }
+      
       proxy.AddMember("password", rapidjson::StringRef(x.Password.c_str()), allocator);
       if (!x.TLSSecure)
       {
