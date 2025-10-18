@@ -225,7 +225,13 @@ void hysteriaConstruct(Proxy &node, const std::string &group, const std::string 
                        const std::string &sni, tribool udp,
                        tribool tfo, tribool scv,
                        tribool tls13, const std::string &underlying_proxy) {
-    commonConstruct(node, ProxyType::Hysteria, group, remarks, add, port, udp, tfo, scv, tls13, underlying_proxy);
+    // For Hysteria, if port is empty but ports is not empty, extract first port for internal use
+    std::string effective_port = port;
+    if (port.empty() && !ports.empty()) {
+        effective_port = extractFirstPort(ports);
+    }
+    
+    commonConstruct(node, ProxyType::Hysteria, group, remarks, add, effective_port, udp, tfo, scv, tls13, underlying_proxy);
     node.Auth = auth;
     node.Host = (host.empty() && !isIPv4(add) && !isIPv6(add)) ? add.data() : trim(host);
     node.UpMbps = up;
@@ -265,7 +271,13 @@ void mieruConstruct(Proxy &node, const std::string &group, const std::string &re
                     const std::string &transfer_protocol, tribool udp,
                     tribool tfo, tribool scv,
                     tribool tls13, const std::string &underlying_proxy) {
-    commonConstruct(node, ProxyType::Mieru, group, remarks, host, port, udp, tfo, scv, tls13, underlying_proxy);
+    // For Mieru, if port is empty but ports is not empty, extract first port for internal use
+    std::string effective_port = port;
+    if (port.empty() && !ports.empty()) {
+        effective_port = extractFirstPort(ports);
+    }
+    
+    commonConstruct(node, ProxyType::Mieru, group, remarks, host, effective_port, udp, tfo, scv, tls13, underlying_proxy);
     node.Host = trim(host);
     node.Password = password;
     node.Ports = ports;
@@ -324,7 +336,13 @@ void hysteria2Construct(Proxy &node, const std::string &group, const std::string
                         const std::string &publicKey, const std::string &ports,
                         tribool udp, tribool tfo,
                         tribool scv, const std::string &underlying_proxy) {
-    commonConstruct(node, ProxyType::Hysteria2, group, remarks, add, port, udp, tfo, scv, tribool(), underlying_proxy);
+    // For Hysteria2, if port is empty but ports is not empty, extract first port for internal use
+    std::string effective_port = port;
+    if (port.empty() && !ports.empty()) {
+        effective_port = extractFirstPort(ports);
+    }
+    
+    commonConstruct(node, ProxyType::Hysteria2, group, remarks, add, effective_port, udp, tfo, scv, tribool(), underlying_proxy);
     node.Password = password;
     node.Host = (host.empty() && !isIPv4(add) && !isIPv6(add)) ? add.data() : trim(host);
     node.UpMbps = up;
@@ -1242,23 +1260,14 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
         singleproxy["port"] >>= port;
         singleproxy["port-range"] >>= ports;
 
-        // Handle special case for Hysteria2 port ranges
-        if (port.empty() || port == "0") {
-            if (ports.empty()) {
-                continue;
-            } else {
-                // Extract first port from port range for Hysteria2
-                if (proxytype == "hysteria2" || proxytype == "hysteria") {
-                    std::string first_port = extractFirstPort(ports);
-                    if (!first_port.empty()) {
-                        port = first_port;
-                    } else {
-                        continue;
-                    }
-                } else {
-                    continue;
-                }
-            }
+        // Skip nodes without any port information
+        if (port.empty() && ports.empty()) {
+            continue;
+        }
+        
+        // For protocols that don't support port ranges, require a specific port
+        if (port.empty() && proxytype != "hysteria2" && proxytype != "hysteria" && proxytype != "mieru") {
+            continue;
         }
         udp = safe_as<std::string>(singleproxy["udp"]);
         scv = safe_as<std::string>(singleproxy["skip-cert-verify"]);
