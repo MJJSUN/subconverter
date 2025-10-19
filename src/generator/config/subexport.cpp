@@ -1433,6 +1433,7 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
       break;
     }
     case ProxyType::VLESS:
+    {
       if (!vless)
         continue;
       // tls = getUrlArg(addition, "security");
@@ -1519,6 +1520,7 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
       proxyStr += params;
       proxyStr += "#" + urlEncode(remark);
       break;
+    }
     case ProxyType::Trojan:
       if (!trojan)
         continue;
