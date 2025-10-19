@@ -1443,75 +1443,80 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
       // fp = getUrlArg(addition, "fp");
       // std::string packet_encoding = getUrlArg(addition, "packet-encoding");
       // std::string alpn = getUrlArg(addition, "alpn");
-      proxyStr = "vless://" + (id.empty() ? "00000000-0000-0000-0000-000000000000" : id) + "@" + hostname + ":" + port + "?";
+      proxyStr = "vless://" + (id.empty() ? "00000000-0000-0000-0000-000000000000" : id) + "@" + hostname + ":" + port;
+      
+      std::string params = "";
       if (!tls.empty())
       {
         if (!pbk.empty())
         {
-          proxyStr += "&security=reality";
+          params += (params.empty() ? "?" : "&") + std::string("security=reality");
         }
         else
         {
-          proxyStr += "&security=" + tls;
+          params += (params.empty() ? "?" : "&") + std::string("security=") + tls;
         }
       }
 
       if (!flow.empty())
       {
-        proxyStr += "&flow=" + flow;
+        params += (params.empty() ? "?" : "&") + std::string("flow=") + flow;
       }
       if (!pbk.empty())
       {
-        proxyStr += "&pbk=" + pbk;
+        params += (params.empty() ? "?" : "&") + std::string("pbk=") + pbk;
       }
       if (!sid.empty())
       {
-        proxyStr += "&sid=" + sid;
+        params += (params.empty() ? "?" : "&") + std::string("sid=") + sid;
       }
       if (!fp.empty())
       {
-        proxyStr += "&fp=" + fp;
+        params += (params.empty() ? "?" : "&") + std::string("fp=") + fp;
       }
       if (!packet_encoding.empty())
       {
-        proxyStr += "&packet-encoding=" + packet_encoding;
+        params += (params.empty() ? "?" : "&") + std::string("packet-encoding=") + packet_encoding;
       }
       if (!alpns.empty())
       {
-        proxyStr += "&alpn=" + alpns[0];
+        params += (params.empty() ? "?" : "&") + std::string("alpn=") + alpns[0];
       }
       if (!sni.empty())
       {
-        proxyStr += "&sni=" + sni;
+        params += (params.empty() ? "?" : "&") + std::string("sni=") + sni;
       }
+      
       if (!transproto.empty())
       {
-        proxyStr += "&type=" + transproto;
+        params += (params.empty() ? "?" : "&") + std::string("type=") + transproto;
         switch (hash_(transproto))
         {
         case "tcp"_hash:
         case "ws"_hash:
         case "h2"_hash:
-          proxyStr += "&headerType=" + fake_type;
+          params += "&headerType=" + fake_type;
           if (!host.empty())
           {
-            proxyStr += "&host=" + host;
+            params += "&host=" + host;
           }
-          proxyStr += "&path=" + urlEncode(path.empty() ? "/" : path);
+          params += "&path=" + urlEncode(path.empty() ? "/" : path);
           break;
         case "grpc"_hash:
-          proxyStr += "&serviceName=" + path;
-          proxyStr += "&mode=" + mode;
+          params += "&serviceName=" + path;
+          params += "&mode=" + mode;
           break;
         case "quic"_hash:
-          proxyStr += "&headerType=" + fake_type;
-          proxyStr += "&quicSecurity=" + (host.empty() ? sni : host);
-          proxyStr += "&key=" + path;
+          params += "&headerType=" + fake_type;
+          params += "&quicSecurity=" + (host.empty() ? sni : host);
+          params += "&key=" + path;
           break;
         default:
           break;
         }
       }
+      
+      proxyStr += params;
       proxyStr += "#" + urlEncode(remark);
       break;
     case ProxyType::Trojan:
