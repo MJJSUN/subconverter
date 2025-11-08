@@ -1538,9 +1538,10 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 singleproxy["client-fingerprint"] >>= fp;
                 singleproxy["alpn"] >>= alpnList;
                 singleproxy["packet-encoding"] >>= packet_encoding;
+                cipher = singleproxy["encryption"].IsDefined() ? safe_as<std::string>(singleproxy["encryption"]) : "";
                 bool vless_udp;
                 singleproxy["udp"] >> vless_udp;
-                vlessConstruct(node, XRAY_DEFAULT_GROUP, ps, server, port, type, id, aid, net, "auto", flow, mode, path,
+                vlessConstruct(node, XRAY_DEFAULT_GROUP, ps, server, port, type, id, aid, net, cipher, flow, mode, path,
                                host, "", tls, pbk, sid, fp, sni, alpnList, packet_encoding, udp, tribool(), tribool(),
                                tribool(), "", v2ray_http_upgrade);
                 break;
@@ -1847,7 +1848,7 @@ void explodeStdHysteria2(std::string hysteria2, Proxy &node) {
 
 
 void explodeStdVless(std::string vless, Proxy &node) {
-    std::string add, port, type, id, aid, net, flow, pbk, sid, fp, mode, path, host, tls, remarks, sni;
+    std::string add, port, type, id, aid, net, flow, pbk, sid, fp, mode, path, host, tls, remarks, sni, cipher;
     std::string addition;
     vless = vless.substr(8);
     string_size pos;
@@ -1868,6 +1869,7 @@ void explodeStdVless(std::string vless, Proxy &node) {
     pbk = getUrlArg(addition, "pbk");
     sid = getUrlArg(addition, "sid");
     fp = getUrlArg(addition, "fp");
+    cipher = getUrlArg(addition, "encryption");
     std::string packet_encoding = getUrlArg(addition, "packet-encoding");
     std::string alpn = getUrlArg(addition, "alpn");
     std::vector<std::string> alpnList;
@@ -1905,7 +1907,7 @@ void explodeStdVless(std::string vless, Proxy &node) {
     if (remarks.empty())
         remarks = add + ":" + port;
     sni = getUrlArg(addition, "sni");
-    vlessConstruct(node, XRAY_DEFAULT_GROUP, remarks, add, port, type, id, aid, net, "auto", flow, mode, path, host, "",
+    vlessConstruct(node, XRAY_DEFAULT_GROUP, remarks, add, port, type, id, aid, net, cipher, flow, mode, path, host, "",
                    tls, pbk, sid, fp, sni, alpnList, packet_encoding);
     return;
 }
@@ -3096,7 +3098,7 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
                             }
                         }
 
-                        vlessConstruct(node, group, ps, server, port, type, id, aid, net, "auto", flow, mode, path,
+                        vlessConstruct(node, group, ps, server, port, type, id, aid, net, "", flow, mode, path,
                                        host, "", tls, pbk, sid, fp, sni, alpnList, packet_encoding, udp);
                         break;
                     case "http"_hash:
