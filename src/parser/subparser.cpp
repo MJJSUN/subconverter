@@ -1320,6 +1320,7 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                     case "grpc"_hash:
                         singleproxy["servername"] >>= host;
                         singleproxy["grpc-opts"]["grpc-service-name"] >>= path;
+                        singleproxy["grpc-opts"]["grpc-mode"] >>= mode;
                         edge.clear();
                         break;
                 }
@@ -1328,6 +1329,10 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 vmessConstruct(node, group, ps, server, port, "", id, aid, net, cipher, path, host, edge, tls, sni,
                                alpnList, udp,
                                tfo, scv);
+                if (net == "grpc") {
+                    node.GRPCServiceName = path;
+                    node.GRPCMode = mode;
+                }
                 break;
             case "ss"_hash:
                 group = SS_DEFAULT_GROUP;
@@ -1436,6 +1441,7 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 switch (hash_(net)) {
                     case "grpc"_hash:
                         singleproxy["grpc-opts"]["grpc-service-name"] >>= path;
+                        singleproxy["grpc-opts"]["grpc-mode"] >>= mode;
                         break;
                     case "ws"_hash:
                         singleproxy["ws-opts"]["path"] >>= path;
@@ -1449,6 +1455,10 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
 
                 trojanConstruct(node, group, ps, server, port, password, net, host, path, fp, sni, alpnList, true, udp,
                                 tfo, scv);
+                if (net == "grpc") {
+                    node.GRPCServiceName = path;
+                    node.GRPCMode = mode;
+                }
                 break;
             case "snell"_hash:
                 group = SNELL_DEFAULT_GROUP;
@@ -1519,6 +1529,7 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                     case "grpc"_hash:
                         singleproxy["servername"] >>= host;
                         singleproxy["grpc-opts"]["grpc-service-name"] >>= path;
+                        singleproxy["grpc-opts"]["grpc-mode"] >>= mode;
                         edge.clear();
                         break;
                     default:
