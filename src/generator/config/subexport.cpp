@@ -403,6 +403,7 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
         singleproxy["network"] = x.TransferProtocol;
         singleproxy["servername"] = x.Host;
         singleproxy["grpc-opts"]["grpc-service-name"] = x.Path;
+        singleproxy["grpc-opts"]["grpc-mode"] = x.GRPCMode.empty() ? "multi" : x.GRPCMode;
         break;
       default:
         continue;
@@ -501,6 +502,7 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
         singleproxy["network"] = x.TransferProtocol;
         if (!x.Path.empty())
           singleproxy["grpc-opts"]["grpc-service-name"] = x.Path;
+        singleproxy["grpc-opts"]["grpc-mode"] = x.GRPCMode.empty() ? "multi" : x.GRPCMode;
         break;
       case "ws"_hash:
         singleproxy["network"] = x.TransferProtocol;
@@ -770,7 +772,7 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
         break;
       case "grpc"_hash:
         singleproxy["network"] = x.TransferProtocol;
-        singleproxy["grpc-opts"]["grpc-mode"] = x.GRPCMode;
+        singleproxy["grpc-opts"]["grpc-mode"] = x.GRPCMode.empty() ? "multi" : x.GRPCMode;
         singleproxy["grpc-opts"]["grpc-service-name"] = x.GRPCServiceName;
         break;
       default:
@@ -1517,7 +1519,7 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
           {
             params += "&serviceName=" + urlEncode(path);
           }
-          params += "&mode=" + mode;
+          params += "&mode=" + (mode.empty() ? "multi" : mode);
           break;
         case "quic"_hash:
           params += "&headerType=" + fake_type;
