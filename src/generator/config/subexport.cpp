@@ -1448,6 +1448,10 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
       proxyStr = "vless://" + (id.empty() ? "00000000-0000-0000-0000-000000000000" : id) + "@" + hostname + ":" + port;
       
       std::string params = "";
+      if (!method.empty())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("encryption=") + method;
+      }
       if (!tls.empty())
       {
         if (!pbk.empty())
@@ -1505,7 +1509,14 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
           params += "&path=" + urlEncode(path.empty() ? "/" : path);
           break;
         case "grpc"_hash:
-          params += "&serviceName=" + path;
+          if (!x.GRPCServiceName.empty())
+          {
+            params += "&serviceName=" + urlEncode(x.GRPCServiceName);
+          }
+          else if (!path.empty())
+          {
+            params += "&serviceName=" + urlEncode(path);
+          }
           params += "&mode=" + mode;
           break;
         case "quic"_hash:
