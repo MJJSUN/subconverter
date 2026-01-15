@@ -1417,7 +1417,7 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
                    (x.AllowInsecure.get() ? "1" : "0");
       } else {
         // Port range case - use mport parameter
-        proxyStr = "hysteria2://" + password + "@" + hostname + "?mport=" + ports + "&insecure=" +
+        proxyStr = "hysteria2://" + password + "@" + hostname + ":1?mport=" + ports + "&insecure=" +
                    (x.AllowInsecure.get() ? "1" : "0");
       }
       if (!obfsparam.empty())
