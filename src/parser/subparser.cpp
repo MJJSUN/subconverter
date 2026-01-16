@@ -316,6 +316,11 @@ void vlessConstruct(Proxy &node, const std::string &group, const std::string &re
             node.GRPCMode = mode.empty() ? "gun" : mode;
             node.GRPCServiceName = path.empty() ? "/" : urlEncode(urlDecode(trim(path)));
             break;
+        case "xhttp"_hash:
+            node.Host = (host.empty() && !isIPv4(add) && !isIPv6(add)) ? add.data() : trim(host);
+            node.Path = path.empty() ? "/" : urlDecode(trim(path));
+            node.XhttpMode = mode;
+            break;
         case "quic"_hash:
             node.Host = host;
             node.QUICSecret = path.empty() ? "/" : trim(path);
@@ -1526,6 +1531,19 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                         singleproxy["h2-opts"]["host"][0] >>= host;
                         edge.clear();
                         break;
+                    case "xhttp"_hash:
+                        // Support both xhttp-opts and splithttp-opts
+                        if (singleproxy["xhttp-opts"].IsDefined()) {
+                            singleproxy["xhttp-opts"]["path"] >>= path;
+                            singleproxy["xhttp-opts"]["host"] >>= host;
+                            singleproxy["xhttp-opts"]["mode"] >>= mode;
+                        } else if (singleproxy["splithttp-opts"].IsDefined()) {
+                            singleproxy["splithttp-opts"]["path"] >>= path;
+                            singleproxy["splithttp-opts"]["host"] >>= host;
+                            singleproxy["splithttp-opts"]["mode"] >>= mode;
+                        }
+                        edge.clear();
+                        break;
                     case "grpc"_hash:
                         singleproxy["servername"] >>= host;
                         singleproxy["grpc-opts"]["grpc-service-name"] >>= path;
@@ -1895,11 +1913,11 @@ void explodeStdVless(std::string vless, Proxy &node) {
             host = getUrlArg(addition, strFind(addition, "sni") ? "sni" : "host");
             path = getUrlArg(addition, "path");
             break;
-        case "xhttp"_hash: // 新增对 type=xhttp 的支持
-            net = "h2"; // 视为 h2/http2 传输
+        case "xhttp"_hash:
             type = getUrlArg(addition, "headerType");
             host = getUrlArg(addition, strFind(addition, "sni") ? "sni" : "host");
             path = getUrlArg(addition, "path");
+            mode = getUrlArg(addition, "mode");
             break;
         case "grpc"_hash:
             host = getUrlArg(addition, "sni");

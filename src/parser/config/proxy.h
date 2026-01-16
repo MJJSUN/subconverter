@@ -130,6 +130,7 @@ struct Proxy {
     String OBFSPassword;
     String GRPCServiceName;
     String GRPCMode;
+    String XhttpMode;
     String ShortId;
     String Flow;
     bool FlowShow = false;

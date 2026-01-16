@@ -70,6 +70,10 @@ struct Settings
     //cron system
     bool enableCron = false;
     CronTaskConfigs cronTasks;
+
+    //ua filter rules
+    std::map<std::string, std::string> uaExcludeRemarks;
+    std::map<std::string, std::string> uaIncludeRemarks;
 };
 
 

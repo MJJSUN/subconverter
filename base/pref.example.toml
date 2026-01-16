@@ -328,6 +328,49 @@ target = "/sub?target=trojan"
 uri = "/test"
 target = "/render?path=templates/test.tpl"
 
+# Filter nodes based on User-Agent of the client making the request.
+# Format: [ua_filter.<UA_keyword>]
+#         exclude = "<pattern>"
+#         include = "<pattern>"
+# The UA_keyword should match the beginning of the User-Agent string.
+# Multiple patterns can be separated by "|" (OR logic).
+# These rules will be appended to the URL parameters "include" and "exclude".
+#
+# Supports special matchers for filtering by node attributes:
+#   !!TYPE=<pattern>       - Match by proxy type (SS|SSR|VMESS|VLESS|TROJAN|HYSTERIA|HYSTERIA2|etc.)
+#   !!TRANSPORT=<pattern>  - Match by transport protocol (tcp|ws|h2|grpc|xhttp|quic|etc.)
+#   !!GROUP=<pattern>      - Match by group name
+#   !!SERVER=<pattern>     - Match by server hostname
+#   !!PORT=<range>         - Match by port number or range
+#
+# Common UA keywords:
+#   clash-verge, ClashForAndroid, ClashforWindows, ClashX, Shadowrocket,
+#   Quantumult, Loon, Surge, Surfboard, Pharos, Kitsunebi, etc.
+
+# Example: Exclude xhttp transport protocol for Clash Verge
+#[ua_filter."clash-verge"]
+#exclude = "!!TRANSPORT=xhttp"
+
+# Example: Exclude Hysteria protocols (may have compatibility issues)
+#[ua_filter."clash-verge"]
+#exclude = "!!TYPE=(HYSTERIA|HYSTERIA2)"
+
+# Example: Exclude multiple transport protocols
+#[ua_filter.ClashForAndroid]
+#exclude = "!!TRANSPORT=(xhttp|quic)"
+
+# Example: Only include specific regions by remark
+#[ua_filter.Quantumult]
+#include = "香港|台湾|日本|美国"
+
+# Example: Exclude nodes by remark keywords
+#[ua_filter.Shadowrocket]
+#exclude = "实验|测试|过期"
+
+# Example: Combine transport filter with remark filter
+#[ua_filter.ClashX]
+#exclude = "!!TRANSPORT=xhttp|测试节点"
+
 #[[tasks]]
 #name = "tick"
 #cronexp = "0/10 * * * * ?"

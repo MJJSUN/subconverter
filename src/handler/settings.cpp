@@ -1008,6 +1008,29 @@ void readConf()
         refresh_schedule();
     }
 
+    if(ini.section_exist("ua_filter"))
+    {
+        ini.enter_section("ua_filter");
+        global.uaExcludeRemarks.clear();
+        global.uaIncludeRemarks.clear();
+        
+        string_array keys = ini.get_keys();
+        for(const auto &key : keys)
+        {
+            std::string value = ini.get(key);
+            if(endsWith(key, ".exclude"))
+            {
+                std::string ua = key.substr(0, key.length() - 8); // remove ".exclude"
+                global.uaExcludeRemarks[ua] = value;
+            }
+            else if(endsWith(key, ".include"))
+            {
+                std::string ua = key.substr(0, key.length() - 8); // remove ".include"
+                global.uaIncludeRemarks[ua] = value;
+            }
+        }
+    }
+
     ini.enter_section("server");
     ini.get_if_exist("listen", global.listenAddress);
     ini.get_int_if_exist("port", global.listenPort);

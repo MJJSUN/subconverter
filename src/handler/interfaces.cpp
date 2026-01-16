@@ -374,6 +374,37 @@ std::string subconverter(RESPONSE_CALLBACK_ARGS) {
         std::find(gRegexBlacklist.cbegin(), gRegexBlacklist.cend(), argExcludeRemark) != gRegexBlacklist.cend())
         return "Invalid request!";
 
+    /// Apply UA-based filtering rules
+    std::string user_agent = request.headers["User-Agent"];
+    if (!user_agent.empty())
+    {
+        // Check if there's a matching UA filter rule
+        for (const auto &ua_rule : global.uaExcludeRemarks)
+        {
+            if (startsWith(user_agent, ua_rule.first))
+            {
+                if (argExcludeRemark.empty())
+                    argExcludeRemark = ua_rule.second;
+                else
+                    argExcludeRemark += "|" + ua_rule.second;
+                writeLog(0, "Applied UA exclude filter for '" + ua_rule.first + "': " + ua_rule.second, LOG_LEVEL_INFO);
+                break;
+            }
+        }
+        for (const auto &ua_rule : global.uaIncludeRemarks)
+        {
+            if (startsWith(user_agent, ua_rule.first))
+            {
+                if (argIncludeRemark.empty())
+                    argIncludeRemark = ua_rule.second;
+                else
+                    argIncludeRemark += "|" + ua_rule.second;
+                writeLog(0, "Applied UA include filter for '" + ua_rule.first + "': " + ua_rule.second, LOG_LEVEL_INFO);
+                break;
+            }
+        }
+    }
+
     /// for external configuration
     std::string lClashBase = global.clashBase, lSurgeBase = global.surgeBase, lMellowBase = global.mellowBase,
             lSurfboardBase = global.surfboardBase;

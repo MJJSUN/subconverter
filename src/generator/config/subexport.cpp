@@ -137,6 +137,7 @@ bool applyMatcher(const std::string &rule, std::string &real_rule, const Proxy &
   static const std::string groupid_regex = R"(^!!(?:GROUPID|INSERT)=([\d\-+!,]+)(?:!!(.*))?$)", group_regex =
                                                                                                     R"(^!!(?:GROUP)=(.+?)(?:!!(.*))?$)";
   static const std::string type_regex = R"(^!!(?:TYPE)=(.+?)(?:!!(.*))?$)", port_regex = R"(^!!(?:PORT)=(.+?)(?:!!(.*))?$)", server_regex = R"(^!!(?:SERVER)=(.+?)(?:!!(.*))?$)";
+  static const std::string transport_regex = R"(^!!(?:TRANSPORT)=(.+?)(?:!!(.*))?$)";
   static const std::map<ProxyType, const char *> types = {
       {ProxyType::Shadowsocks, "SS"},
       {ProxyType::ShadowsocksR, "SSR"},
@@ -182,6 +183,14 @@ bool applyMatcher(const std::string &rule, std::string &real_rule, const Proxy &
     regGetMatch(rule, server_regex, 3, 0, &target, &ret_real_rule);
     real_rule = ret_real_rule;
     return regFind(node.Hostname, target);
+  }
+  else if (startsWith(rule, "!!TRANSPORT="))
+  {
+    regGetMatch(rule, transport_regex, 3, 0, &target, &ret_real_rule);
+    real_rule = ret_real_rule;
+    if (node.TransferProtocol.empty())
+      return false;
+    return regMatch(node.TransferProtocol, target);
   }
   else
     real_rule = rule;
@@ -770,6 +779,14 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
         if (!x.Host.empty())
           singleproxy["h2-opts"]["host"].push_back(x.Host);
         break;
+      case "xhttp"_hash:
+        singleproxy["network"] = x.TransferProtocol;
+        singleproxy["xhttp-opts"]["path"] = x.Path;
+        if (!x.Host.empty())
+          singleproxy["xhttp-opts"]["host"].push_back(x.Host);
+        if (!x.XhttpMode.empty())
+          singleproxy["xhttp-opts"]["mode"] = x.XhttpMode;
+        break;
       case "grpc"_hash:
         singleproxy["network"] = x.TransferProtocol;
         singleproxy["grpc-opts"]["grpc-mode"] = (x.GRPCMode.empty() || x.GRPCMode == "gun") ? "multi" : x.GRPCMode;
@@ -1350,7 +1367,7 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
   {
     std::string remark = x.Remark;
     std::string &hostname = x.Hostname, &sni = x.ServerName, &password = x.Password, &method = x.EncryptMethod, &plugin = x.Plugin, &pluginopts = x.PluginOption, &protocol = x.Protocol, &protoparam = x.ProtocolParam, &flow = x.Flow, &pbk = x.PublicKey, &sid = x.ShortId, &fp = x.Fingerprint,
-                &packet_encoding = x.PacketEncoding, &fake_type = x.FakeType, &mode = x.GRPCMode,
+                &packet_encoding = x.PacketEncoding, &fake_type = x.FakeType, &mode = x.GRPCMode, &xhttp_mode = x.XhttpMode,
                 &obfs = x.OBFS, &obfsparam = x.OBFSParam, &obfsPassword = x.OBFSPassword, &id = x.UserId, &transproto = x.TransferProtocol, &host = x.Host, &tls = x.TLSStr, &path = x.Path, &faketype = x.FakeType, &ports = x.Ports;
     bool &tlssecure = x.TLSSecure;
     std::vector<string> alpns = x.AlpnList;
@@ -1509,6 +1526,18 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
             params += "&host=" + host;
           }
           params += "&path=" + urlEncode(path.empty() ? "/" : path);
+          break;
+        case "xhttp"_hash:
+          params += "&headerType=" + fake_type;
+          if (!host.empty())
+          {
+            params += "&host=" + host;
+          }
+          params += "&path=" + urlEncode(path.empty() ? "/" : path);
+          if (!xhttp_mode.empty())
+          {
+            params += "&mode=" + xhttp_mode;
+          }
           break;
         case "grpc"_hash:
           if (!x.GRPCServiceName.empty())
