@@ -1014,10 +1014,12 @@ void readConf()
         global.uaExcludeRemarks.clear();
         global.uaIncludeRemarks.clear();
         
-        string_array keys = ini.get_keys();
-        for(const auto &key : keys)
+        string_multimap items;
+        ini.get_items(items);
+        for(const auto &item : items)
         {
-            std::string value = ini.get(key);
+            const std::string &key = item.first;
+            const std::string &value = item.second;
             if(endsWith(key, ".exclude"))
             {
                 std::string ua = key.substr(0, key.length() - 8); // remove ".exclude"
