@@ -781,11 +781,11 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
         break;
       case "xhttp"_hash:
         singleproxy["network"] = x.TransferProtocol;
-        singleproxy["xhttp-opts"]["path"] = x.Path;
+        singleproxy["splithttp-opts"]["path"] = x.Path;
         if (!x.Host.empty())
-          singleproxy["xhttp-opts"]["host"].push_back(x.Host);
+          singleproxy["splithttp-opts"]["host"].push_back(x.Host);
         if (!x.XhttpMode.empty())
-          singleproxy["xhttp-opts"]["mode"] = x.XhttpMode;
+          singleproxy["splithttp-opts"]["mode"] = x.XhttpMode;
         break;
       case "grpc"_hash:
         singleproxy["network"] = x.TransferProtocol;
