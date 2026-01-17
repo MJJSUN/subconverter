@@ -783,7 +783,7 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
         singleproxy["network"] = x.TransferProtocol;
         singleproxy["splithttp-opts"]["path"] = x.Path;
         if (!x.Host.empty())
-          singleproxy["splithttp-opts"]["host"].push_back(x.Host);
+          singleproxy["splithttp-opts"]["host"] = x.Host;
         if (!x.XhttpMode.empty())
           singleproxy["splithttp-opts"]["mode"] = x.XhttpMode;
         break;
