@@ -84,6 +84,161 @@ std::string extractFirstPort(const std::string& ports) {
     return "";
 }
 
+void xhttpReuseConstruct(const YAML::Node &node, XhttpReuseSettings &settings) {
+    if (!node.IsDefined() || !node.IsMap()) {
+        return;
+    }
+
+    node["max-connections"] >>= settings.MaxConnections;
+    node["max-concurrency"] >>= settings.MaxConcurrency;
+    node["c-max-reuse-times"] >>= settings.CMaxReuseTimes;
+    node["h-max-request-times"] >>= settings.HMaxRequestTimes;
+    node["h-max-reusable-secs"] >>= settings.HMaxReusableSecs;
+}
+
+void xhttpDownloadConstruct(const YAML::Node &node, XhttpDownloadSettings &settings) {
+    if (!node.IsDefined() || !node.IsMap()) {
+        return;
+    }
+
+    node["path"] >>= settings.Path;
+    node["host"] >>= settings.Host;
+    node["x-padding-bytes"] >>= settings.XPaddingBytes;
+    node["sc-max-each-post-bytes"] >>= settings.ScMaxEachPostBytes;
+    node["server"] >>= settings.Server;
+    node["port"] >>= settings.Port;
+    if (node["tls"].IsDefined() && !node["tls"].IsNull()) {
+        settings.TLS = safe_as<bool>(node["tls"]);
+    }
+    node["servername"] >>= settings.ServerName;
+    node["client-fingerprint"] >>= settings.Fingerprint;
+    node["alpn"] >>= settings.AlpnList;
+    xhttpReuseConstruct(node["reuse-settings"], settings.ReuseSettings);
+}
+
+void xhttpConfigConstruct(const YAML::Node &node, std::string &path, std::string &host, std::string &mode,
+                         XhttpConfig &settings) {
+    if (!node.IsDefined() || !node.IsMap()) {
+        return;
+    }
+
+    node["path"] >>= path;
+    node["host"] >>= host;
+    node["mode"] >>= mode;
+    node["x-padding-bytes"] >>= settings.XPaddingBytes;
+    node["sc-max-each-post-bytes"] >>= settings.ScMaxEachPostBytes;
+    if (node["no-grpc-header"].IsDefined() && !node["no-grpc-header"].IsNull()) {
+        settings.NoGrpcHeader = safe_as<bool>(node["no-grpc-header"]);
+    }
+
+    const YAML::Node headers = node["headers"];
+    if (headers.IsDefined() && headers.IsMap()) {
+        for (auto iter = headers.begin(); iter != headers.end(); iter++) {
+            if (!iter->first.IsDefined() || iter->first.IsNull() || !iter->second.IsDefined() || iter->second.IsNull()) {
+                continue;
+            }
+            settings.Headers[iter->first.as<std::string>()] = safe_as<std::string>(iter->second);
+        }
+    }
+
+    xhttpReuseConstruct(node["reuse-settings"], settings.ReuseSettings);
+    xhttpDownloadConstruct(node["download-settings"], settings.DownloadSettings);
+}
+
+void xhttpReuseConstruct(const rapidjson::Value &node, XhttpReuseSettings &settings) {
+    if (!node.IsObject()) {
+        return;
+    }
+
+    if (node.HasMember("maxConnections")) node["maxConnections"] >> settings.MaxConnections;
+    if (node.HasMember("maxConcurrency")) node["maxConcurrency"] >> settings.MaxConcurrency;
+    if (node.HasMember("cMaxReuseTimes")) node["cMaxReuseTimes"] >> settings.CMaxReuseTimes;
+    if (node.HasMember("hMaxRequestTimes")) node["hMaxRequestTimes"] >> settings.HMaxRequestTimes;
+    if (node.HasMember("hMaxReusableSecs")) node["hMaxReusableSecs"] >> settings.HMaxReusableSecs;
+}
+
+void xhttpDownloadConstruct(const rapidjson::Value &node, XhttpDownloadSettings &settings) {
+    if (!node.IsObject()) {
+        return;
+    }
+
+    if (node.HasMember("address")) node["address"] >> settings.Server;
+    if (node.HasMember("port")) {
+        int port = 0;
+        node["port"] >> port;
+        settings.Port = port;
+    }
+    if (node.HasMember("security")) {
+        std::string security;
+        node["security"] >> security;
+        if (security == "tls") {
+            settings.TLS = true;
+        } else if (!security.empty()) {
+            settings.TLS = false;
+        }
+    }
+
+    if (node.HasMember("tlsSettings") && node["tlsSettings"].IsObject()) {
+        const auto &tlsSettings = node["tlsSettings"];
+        if (tlsSettings.HasMember("serverName")) tlsSettings["serverName"] >> settings.ServerName;
+        if (tlsSettings.HasMember("fingerprint")) tlsSettings["fingerprint"] >> settings.Fingerprint;
+        if (tlsSettings.HasMember("alpn") && tlsSettings["alpn"].IsArray()) {
+            for (const auto &item : tlsSettings["alpn"].GetArray()) {
+                if (item.IsString()) {
+                    settings.AlpnList.emplace_back(item.GetString());
+                }
+            }
+        }
+    }
+
+    if (node.HasMember("xhttpSettings") && node["xhttpSettings"].IsObject()) {
+        const auto &xhttpSettings = node["xhttpSettings"];
+        if (xhttpSettings.HasMember("path")) xhttpSettings["path"] >> settings.Path;
+        if (xhttpSettings.HasMember("host")) xhttpSettings["host"] >> settings.Host;
+        if (xhttpSettings.HasMember("extra") && xhttpSettings["extra"].IsObject()) {
+            const auto &extra = xhttpSettings["extra"];
+            if (extra.HasMember("xPaddingBytes")) extra["xPaddingBytes"] >> settings.XPaddingBytes;
+            if (extra.HasMember("scMaxEachPostBytes")) extra["scMaxEachPostBytes"] >> settings.ScMaxEachPostBytes;
+            if (extra.HasMember("xmux") && extra["xmux"].IsObject()) {
+                xhttpReuseConstruct(extra["xmux"], settings.ReuseSettings);
+            }
+        }
+    }
+}
+
+void xhttpExtraConstruct(const std::string &extra, XhttpConfig &settings) {
+    if (extra.empty()) {
+        return;
+    }
+
+    rapidjson::Document document;
+    document.Parse(urlDecode(extra).c_str());
+    if (document.HasParseError() || !document.IsObject()) {
+        return;
+    }
+
+    if (document.HasMember("headers") && document["headers"].IsObject()) {
+        for (auto iter = document["headers"].MemberBegin(); iter != document["headers"].MemberEnd(); ++iter) {
+            if (iter->value.IsString()) {
+                settings.Headers[iter->name.GetString()] = iter->value.GetString();
+            }
+        }
+    }
+    if (document.HasMember("xPaddingBytes")) document["xPaddingBytes"] >> settings.XPaddingBytes;
+    if (document.HasMember("scMaxEachPostBytes")) document["scMaxEachPostBytes"] >> settings.ScMaxEachPostBytes;
+    if (document.HasMember("noGRPCHeader")) {
+        std::string value;
+        document["noGRPCHeader"] >> value;
+        settings.NoGrpcHeader = value;
+    }
+    if (document.HasMember("xmux") && document["xmux"].IsObject()) {
+        xhttpReuseConstruct(document["xmux"], settings.ReuseSettings);
+    }
+    if (document.HasMember("downloadSettings") && document["downloadSettings"].IsObject()) {
+        xhttpDownloadConstruct(document["downloadSettings"], settings.DownloadSettings);
+    }
+}
+
 void commonConstruct(Proxy &node, ProxyType type, const std::string &group, const std::string &remarks,
                      const std::string &server, const std::string &port, const tribool &udp, const tribool &tfo,
                      const tribool &scv, const tribool &tls13, const std::string &underlying_proxy) {
@@ -1534,13 +1689,9 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                     case "xhttp"_hash:
                         // Support both xhttp-opts and splithttp-opts
                         if (singleproxy["xhttp-opts"].IsDefined()) {
-                            singleproxy["xhttp-opts"]["path"] >>= path;
-                            singleproxy["xhttp-opts"]["host"] >>= host;
-                            singleproxy["xhttp-opts"]["mode"] >>= mode;
+                            xhttpConfigConstruct(singleproxy["xhttp-opts"], path, host, mode, node.Xhttp);
                         } else if (singleproxy["splithttp-opts"].IsDefined()) {
-                            singleproxy["splithttp-opts"]["path"] >>= path;
-                            singleproxy["splithttp-opts"]["host"] >>= host;
-                            singleproxy["splithttp-opts"]["mode"] >>= mode;
+                            xhttpConfigConstruct(singleproxy["splithttp-opts"], path, host, mode, node.Xhttp);
                         }
                         edge.clear();
                         break;
@@ -1915,7 +2066,10 @@ void explodeStdVless(std::string vless, Proxy &node) {
             break;
         case "xhttp"_hash:
             type = getUrlArg(addition, "headerType");
-            host = getUrlArg(addition, strFind(addition, "sni") ? "sni" : "host");
+            host = getUrlArg(addition, "host");
+            if (host.empty()) {
+                host = getUrlArg(addition, "sni");
+            }
             path = getUrlArg(addition, "path");
             mode = getUrlArg(addition, "mode");
             break;
@@ -1938,6 +2092,9 @@ void explodeStdVless(std::string vless, Proxy &node) {
     sni = getUrlArg(addition, "sni");
     vlessConstruct(node, XRAY_DEFAULT_GROUP, remarks, add, port, type, id, aid, net, cipher, flow, mode, path, host, "",
                    tls, pbk, sid, fp, sni, alpnList, packet_encoding);
+    if (net == "xhttp") {
+        xhttpExtraConstruct(getUrlArg(addition, "extra"), node.Xhttp);
+    }
     return;
 }
 

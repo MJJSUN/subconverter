@@ -1,6 +1,7 @@
 #ifndef PROXY_H_INCLUDED
 #define PROXY_H_INCLUDED
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -8,6 +9,53 @@
 
 using String = std::string;
 using StringArray = std::vector<String>;
+
+struct XhttpReuseSettings {
+    String MaxConnections;
+    String MaxConcurrency;
+    String CMaxReuseTimes;
+    String HMaxRequestTimes;
+    String HMaxReusableSecs;
+
+    bool empty() const {
+        return MaxConnections.empty() && MaxConcurrency.empty() && CMaxReuseTimes.empty() &&
+               HMaxRequestTimes.empty() && HMaxReusableSecs.empty();
+    }
+};
+
+struct XhttpDownloadSettings {
+    String Path;
+    String Host;
+    String XPaddingBytes;
+    String ScMaxEachPostBytes;
+    XhttpReuseSettings ReuseSettings;
+    String Server;
+    uint16_t Port = 0;
+    tribool TLS;
+    String ServerName;
+    String Fingerprint;
+    StringArray AlpnList;
+
+    bool empty() const {
+        return Path.empty() && Host.empty() && XPaddingBytes.empty() && ScMaxEachPostBytes.empty() &&
+               ReuseSettings.empty() && Server.empty() && Port == 0 && TLS.is_undef() &&
+               ServerName.empty() && Fingerprint.empty() && AlpnList.empty();
+    }
+};
+
+struct XhttpConfig {
+    std::map<String, String> Headers;
+    tribool NoGrpcHeader;
+    String XPaddingBytes;
+    String ScMaxEachPostBytes;
+    XhttpReuseSettings ReuseSettings;
+    XhttpDownloadSettings DownloadSettings;
+
+    bool empty() const {
+        return Headers.empty() && NoGrpcHeader.is_undef() && XPaddingBytes.empty() &&
+               ScMaxEachPostBytes.empty() && ReuseSettings.empty() && DownloadSettings.empty();
+    }
+};
 
 enum class ProxyType
 {
@@ -131,6 +179,7 @@ struct Proxy {
     String GRPCServiceName;
     String GRPCMode;
     String XhttpMode;
+    XhttpConfig Xhttp;
     String ShortId;
     String Flow;
     bool FlowShow = false;

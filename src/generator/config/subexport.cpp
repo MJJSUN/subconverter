@@ -257,6 +257,212 @@ void groupGenerate(const std::string &rule, std::vector<Proxy> &nodelist, string
   }
 }
 
+void xhttpReuseToClash(YAML::Node node, const XhttpReuseSettings &settings)
+{
+  if (settings.empty())
+    return;
+
+  if (!settings.MaxConnections.empty())
+    node["max-connections"] = settings.MaxConnections;
+  if (!settings.MaxConcurrency.empty())
+    node["max-concurrency"] = settings.MaxConcurrency;
+  if (!settings.CMaxReuseTimes.empty())
+    node["c-max-reuse-times"] = settings.CMaxReuseTimes;
+  if (!settings.HMaxRequestTimes.empty())
+    node["h-max-request-times"] = settings.HMaxRequestTimes;
+  if (!settings.HMaxReusableSecs.empty())
+    node["h-max-reusable-secs"] = settings.HMaxReusableSecs;
+}
+
+void xhttpDownloadToClash(YAML::Node node, const XhttpDownloadSettings &settings)
+{
+  if (settings.empty())
+    return;
+
+  if (!settings.Path.empty())
+    node["path"] = settings.Path;
+  if (!settings.Host.empty())
+    node["host"] = settings.Host;
+  if (!settings.XPaddingBytes.empty())
+    node["x-padding-bytes"] = settings.XPaddingBytes;
+  if (!settings.ScMaxEachPostBytes.empty())
+    node["sc-max-each-post-bytes"] = settings.ScMaxEachPostBytes;
+  if (!settings.Server.empty())
+    node["server"] = settings.Server;
+  if (settings.Port != 0)
+    node["port"] = settings.Port;
+  if (!settings.TLS.is_undef())
+    node["tls"] = settings.TLS.get();
+  if (!settings.ServerName.empty())
+    node["servername"] = settings.ServerName;
+  if (!settings.Fingerprint.empty())
+    node["client-fingerprint"] = settings.Fingerprint;
+  if (!settings.AlpnList.empty())
+  {
+    for (const auto &item : settings.AlpnList)
+      node["alpn"].push_back(item);
+  }
+  xhttpReuseToClash(node["reuse-settings"], settings.ReuseSettings);
+}
+
+void xhttpConfigToClash(YAML::Node node, const Proxy &proxy)
+{
+  node["path"] = proxy.Path;
+  if (!proxy.Host.empty())
+    node["host"] = proxy.Host;
+  if (!proxy.XhttpMode.empty())
+    node["mode"] = proxy.XhttpMode;
+  if (!proxy.Xhttp.XPaddingBytes.empty())
+    node["x-padding-bytes"] = proxy.Xhttp.XPaddingBytes;
+  if (!proxy.Xhttp.ScMaxEachPostBytes.empty())
+    node["sc-max-each-post-bytes"] = proxy.Xhttp.ScMaxEachPostBytes;
+  if (!proxy.Xhttp.NoGrpcHeader.is_undef())
+    node["no-grpc-header"] = proxy.Xhttp.NoGrpcHeader.get();
+  if (!proxy.Xhttp.Headers.empty())
+  {
+    for (const auto &[key, value] : proxy.Xhttp.Headers)
+      node["headers"][key] = value;
+  }
+  xhttpReuseToClash(node["reuse-settings"], proxy.Xhttp.ReuseSettings);
+  xhttpDownloadToClash(node["download-settings"], proxy.Xhttp.DownloadSettings);
+}
+
+bool addStringOrNumberJsonMember(rapidjson::Value &node, const char *name, const std::string &value,
+                                 rapidjson::MemoryPoolAllocator<> &allocator)
+{
+  if (value.empty())
+    return false;
+
+  bool numeric = !value.empty();
+  std::size_t start = value[0] == '-' ? 1 : 0;
+  if (start >= value.size())
+    numeric = false;
+  for (std::size_t i = start; numeric && i < value.size(); i++)
+  {
+    if (!std::isdigit(static_cast<unsigned char>(value[i])))
+      numeric = false;
+  }
+
+  if (numeric)
+  {
+    try
+    {
+      node.AddMember(rapidjson::Value(name, allocator), rapidjson::Value(std::stoll(value)), allocator);
+      return true;
+    }
+    catch (...)
+    {
+    }
+  }
+
+  node.AddMember(rapidjson::Value(name, allocator), rapidjson::Value(value.c_str(), allocator), allocator);
+  return true;
+}
+
+void xhttpReuseToJson(rapidjson::Value &node, const XhttpReuseSettings &settings,
+                      rapidjson::MemoryPoolAllocator<> &allocator)
+{
+  if (settings.empty())
+    return;
+
+  addStringOrNumberJsonMember(node, "maxConnections", settings.MaxConnections, allocator);
+  addStringOrNumberJsonMember(node, "maxConcurrency", settings.MaxConcurrency, allocator);
+  addStringOrNumberJsonMember(node, "cMaxReuseTimes", settings.CMaxReuseTimes, allocator);
+  addStringOrNumberJsonMember(node, "hMaxRequestTimes", settings.HMaxRequestTimes, allocator);
+  addStringOrNumberJsonMember(node, "hMaxReusableSecs", settings.HMaxReusableSecs, allocator);
+}
+
+rapidjson::Value xhttpDownloadToJson(const XhttpDownloadSettings &settings, rapidjson::MemoryPoolAllocator<> &allocator)
+{
+  rapidjson::Value node(rapidjson::kObjectType);
+  if (settings.empty())
+    return node;
+
+  if (!settings.Server.empty())
+    node.AddMember("address", rapidjson::Value(settings.Server.c_str(), allocator), allocator);
+  if (settings.Port != 0)
+    node.AddMember("port", settings.Port, allocator);
+  if (!settings.TLS.is_undef())
+    node.AddMember("security", rapidjson::Value(settings.TLS.get() ? "tls" : "none", allocator), allocator);
+
+  if (!settings.ServerName.empty() || !settings.Fingerprint.empty() || !settings.AlpnList.empty())
+  {
+    rapidjson::Value tlsSettings(rapidjson::kObjectType);
+    if (!settings.ServerName.empty())
+      tlsSettings.AddMember("serverName", rapidjson::Value(settings.ServerName.c_str(), allocator), allocator);
+    if (!settings.Fingerprint.empty())
+      tlsSettings.AddMember("fingerprint", rapidjson::Value(settings.Fingerprint.c_str(), allocator), allocator);
+    if (!settings.AlpnList.empty())
+    {
+      rapidjson::Value alpn(rapidjson::kArrayType);
+      for (const auto &item : settings.AlpnList)
+        alpn.PushBack(rapidjson::Value(item.c_str(), allocator), allocator);
+      tlsSettings.AddMember("alpn", alpn, allocator);
+    }
+    node.AddMember("tlsSettings", tlsSettings, allocator);
+  }
+
+  rapidjson::Value xhttpSettings(rapidjson::kObjectType);
+  if (!settings.Path.empty())
+    xhttpSettings.AddMember("path", rapidjson::Value(settings.Path.c_str(), allocator), allocator);
+  if (!settings.Host.empty())
+    xhttpSettings.AddMember("host", rapidjson::Value(settings.Host.c_str(), allocator), allocator);
+  rapidjson::Value xhttpExtra(rapidjson::kObjectType);
+  addStringOrNumberJsonMember(xhttpExtra, "xPaddingBytes", settings.XPaddingBytes, allocator);
+  addStringOrNumberJsonMember(xhttpExtra, "scMaxEachPostBytes", settings.ScMaxEachPostBytes, allocator);
+  if (!settings.ReuseSettings.empty())
+  {
+    rapidjson::Value xmux(rapidjson::kObjectType);
+    xhttpReuseToJson(xmux, settings.ReuseSettings, allocator);
+    if (!xmux.ObjectEmpty())
+      xhttpExtra.AddMember("xmux", xmux, allocator);
+  }
+  if (!xhttpExtra.ObjectEmpty())
+    xhttpSettings.AddMember("extra", xhttpExtra, allocator);
+  if (!xhttpSettings.ObjectEmpty())
+    node.AddMember("xhttpSettings", xhttpSettings, allocator);
+
+  node.AddMember("network", "xhttp", allocator);
+  return node;
+}
+
+std::string buildVlessXhttpExtra(const Proxy &proxy)
+{
+  rapidjson::Document document;
+  document.SetObject();
+  auto &allocator = document.GetAllocator();
+
+  if (!proxy.Xhttp.Headers.empty())
+  {
+    rapidjson::Value headers(rapidjson::kObjectType);
+    for (const auto &[key, value] : proxy.Xhttp.Headers)
+      headers.AddMember(rapidjson::Value(key.c_str(), allocator), rapidjson::Value(value.c_str(), allocator), allocator);
+    document.AddMember("headers", headers, allocator);
+  }
+  addStringOrNumberJsonMember(document, "xPaddingBytes", proxy.Xhttp.XPaddingBytes, allocator);
+  addStringOrNumberJsonMember(document, "scMaxEachPostBytes", proxy.Xhttp.ScMaxEachPostBytes, allocator);
+  if (!proxy.Xhttp.NoGrpcHeader.is_undef())
+    document.AddMember("noGRPCHeader", proxy.Xhttp.NoGrpcHeader.get(), allocator);
+  if (!proxy.Xhttp.ReuseSettings.empty())
+  {
+    rapidjson::Value xmux(rapidjson::kObjectType);
+    xhttpReuseToJson(xmux, proxy.Xhttp.ReuseSettings, allocator);
+    if (!xmux.ObjectEmpty())
+      document.AddMember("xmux", xmux, allocator);
+  }
+  if (!proxy.Xhttp.DownloadSettings.empty())
+  {
+    rapidjson::Value downloadSettings = xhttpDownloadToJson(proxy.Xhttp.DownloadSettings, allocator);
+    if (!downloadSettings.ObjectEmpty())
+      document.AddMember("downloadSettings", downloadSettings, allocator);
+  }
+
+  if (document.ObjectEmpty())
+    return "";
+
+  return urlEncode(document | rapidjson_ext::SerializeObject());
+}
+
 void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGroupConfigs &extra_proxy_group, bool clashR,
                   extra_settings &ext)
 {
@@ -781,11 +987,7 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
         break;
       case "xhttp"_hash:
         singleproxy["network"] = x.TransferProtocol;
-        singleproxy["splithttp-opts"]["path"] = x.Path;
-        if (!x.Host.empty())
-          singleproxy["splithttp-opts"]["host"] = x.Host;
-        if (!x.XhttpMode.empty())
-          singleproxy["splithttp-opts"]["mode"] = x.XhttpMode;
+        xhttpConfigToClash(singleproxy["xhttp-opts"], x);
         break;
       case "grpc"_hash:
         singleproxy["network"] = x.TransferProtocol;
@@ -1537,6 +1739,10 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
           if (!xhttp_mode.empty())
           {
             params += "&mode=" + xhttp_mode;
+          }
+          if (const std::string extra = buildVlessXhttpExtra(x); !extra.empty())
+          {
+            params += "&extra=" + extra;
           }
           break;
         case "grpc"_hash:
