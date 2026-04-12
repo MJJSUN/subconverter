@@ -1,8 +1,9 @@
 #include <algorithm>
+#include <climits>
+#include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <numeric>
-#include <cmath>
-#include <climits>
 
 #include "config/regmatch.h"
 #include "generator/config/subexport.h"
@@ -347,7 +348,9 @@ bool addStringOrNumberJsonMember(rapidjson::Value &node, const char *name, const
   {
     try
     {
-      node.AddMember(rapidjson::Value(name, allocator), rapidjson::Value(std::stoll(value)), allocator);
+      rapidjson::Value number;
+      number.SetInt64(static_cast<int64_t>(std::stoll(value)));
+      node.AddMember(rapidjson::Value(name, allocator), number, allocator);
       return true;
     }
     catch (...)
