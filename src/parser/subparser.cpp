@@ -3374,7 +3374,7 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
 }
 
 void explodeTuic(const std::string &tuic, Proxy &node) {
-    std::string add, port, password, host, insecure, alpn, remarks, sni, ports, congestion_control;
+    std::string add, port, password, host, insecure, alpn, remarks, sni, ports, congestion_control, udpRelayMode;
     std::string addition;
     tribool scv;
     std::string link = tuic.substr(7);
@@ -3424,9 +3424,11 @@ void explodeTuic(const std::string &tuic, Proxy &node) {
     alpn = getUrlArg(addition, "alpn");
     sni = getUrlArg(addition, "sni");
     congestion_control = getUrlArg(addition, "congestion_control");
+    udpRelayMode = getUrlArg(addition, "udp_relay_mode");
     if (remarks.empty())
         remarks = add + ":" + port;
-    tuicConstruct(node, TUIC_DEFAULT_GROUP, remarks, add, port, password, congestion_control, alpn, sni, uuid, "native",
+    tuicConstruct(node, TUIC_DEFAULT_GROUP, remarks, add, port, password, congestion_control, alpn, sni, uuid,
+                  udpRelayMode.empty() ? "native" : udpRelayMode,
                   "",
                   tribool(),
                   tribool(), scv);

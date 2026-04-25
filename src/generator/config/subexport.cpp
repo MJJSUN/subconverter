@@ -1564,9 +1564,9 @@ std::string proxyToSurge(std::vector<Proxy> &nodes, const std::string &base_conf
 
 std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &ext)
 {
-  /// types: SS=1 SSR=2 VMess=4 Trojan=8,hysteria2=16,vless=32
+  /// types: SS=1 SSR=2 VMess=4 Trojan=8,hysteria2=16,vless=32,TUIC=64
   std::string proxyStr, allLinks;
-  bool ss = GETBIT(types, 1), ssr = GETBIT(types, 2), vmess = GETBIT(types, 3), trojan = GETBIT(types, 4), hysteria2 = GETBIT(types, 5), vless = GETBIT(types, 6);
+  bool ss = GETBIT(types, 1), ssr = GETBIT(types, 2), vmess = GETBIT(types, 3), trojan = GETBIT(types, 4), hysteria2 = GETBIT(types, 5), vless = GETBIT(types, 6), tuic = GETBIT(types, 7);
 
   for (Proxy &x : nodes)
   {
@@ -1794,6 +1794,38 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
       }
       proxyStr += "#" + urlEncode(remark);
       break;
+    case ProxyType::TUIC:
+    {
+      if (!tuic)
+        continue;
+      proxyStr = "tuic://" + id + ":" + password + "@" + hostname + ":" + port;
+
+      std::string params;
+      if (!x.CongestionControl.empty())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("congestion_control=") + x.CongestionControl;
+      }
+      if (!x.UdpRelayMode.empty())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("udp_relay_mode=") + x.UdpRelayMode;
+      }
+      if (!x.AllowInsecure.is_undef())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("insecure=") + (x.AllowInsecure.get() ? "1" : "0");
+      }
+      if (!sni.empty())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("sni=") + sni;
+      }
+      if (!x.Alpn.empty())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("alpn=") + x.Alpn;
+      }
+
+      proxyStr += params;
+      proxyStr += "#" + urlEncode(remark);
+      break;
+    }
     default:
       continue;
     }
