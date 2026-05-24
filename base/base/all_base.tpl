@@ -171,12 +171,14 @@ excluded_routes=192.168.0.0/16, 172.16.0.0/12, 100.64.0.0/10, 10.0.0.0/8
 geo_location_checker=http://ip-api.com/json/?lang=zh-CN, https://github.com/KOP-XIAO/QuantumultX/raw/master/Scripts/IP_API.js
 network_check_url=http://www.baidu.com/
 server_check_url=http://www.gstatic.com/generate_204
+server_check_timeout=5000
+fallback_udp_policy=reject
+dns_reject_domain_behavior=loopback
 
 [dns]
-server=119.29.29.29
 server=223.5.5.5
-server=1.0.0.1
-server=8.8.8.8
+server=119.29.29.29
+doh-server=https://dns.alidns.com/dns-query, https://doh.pub/dns-query
 
 [policy]
 static=♻️ 自动选择, direct, img-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Auto.png
@@ -201,6 +203,8 @@ static=🐟 漏网之鱼, direct, img-url=https://raw.githubusercontent.com/Kool
 [filter_local]
 
 [rewrite_local]
+
+[task_local]
 
 [mitm]
 

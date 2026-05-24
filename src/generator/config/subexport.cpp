@@ -2167,7 +2167,7 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
                   const ProxyGroupConfigs &extra_proxy_group, extra_settings &ext)
 {
   std::string proxyStr;
-  tribool udp, tfo, scv, tls13;
+  tribool udp, tfo, scv;
   std::vector<Proxy> nodelist;
   string_array remarks_list;
 
@@ -2191,11 +2191,9 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
     udp = ext.udp;
     tfo = ext.tfo;
     scv = ext.skip_cert_verify;
-    tls13 = ext.tls13;
     udp.define(x.UDP);
     tfo.define(x.TCPFastOpen);
     scv.define(x.AllowInsecure);
-    tls13.define(x.TLS13);
 
     switch (x.Type)
     {
@@ -2205,8 +2203,6 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
       proxyStr = "vmess = " + hostname + ":" + port + ", method=" + method + ", password=" + id;
       if (x.AlterId != 0)
         proxyStr += ", aead=false";
-      if (tlssecure && !tls13.is_undef())
-        proxyStr += ", tls13=" + std::string(tls13 ? "true" : "false");
       if (transproto == "ws")
       {
         if (tlssecure)
@@ -2226,8 +2222,6 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
       proxyStr = "vless = " + hostname + ":" + port + ", method=" + method + ", password=" + id;
       if (x.AlterId != 0)
         proxyStr += ", aead=false";
-      if (tlssecure && !tls13.is_undef())
-        proxyStr += ", tls13=" + std::string(tls13 ? "true" : "false");
       if (transproto == "ws")
       {
         if (tlssecure)
@@ -2238,6 +2232,14 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
       }
       else if (tlssecure)
         proxyStr += ", obfs=over-tls, obfs-host=" + host;
+      if (!x.PublicKey.empty())
+      {
+        proxyStr += ", reality-base64-pubkey=" + x.PublicKey;
+        if (!x.ShortId.empty())
+          proxyStr += ", reality-hex-shortid=" + x.ShortId;
+      }
+      if (!x.Flow.empty())
+        proxyStr += ", vless-flow=" + x.Flow;
       break;
     case ProxyType::Shadowsocks:
       proxyStr =
@@ -2260,8 +2262,6 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
           if (tlssecure && plugin == "ws")
           {
             plugin += 's';
-            if (!tls13.is_undef())
-              proxyStr += ", tls13=" + std::string(tls13 ? "true" : "false");
           }
           proxyStr += ", obfs=" + plugin;
           if (!host.empty())
@@ -2293,8 +2293,6 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
       if (tlssecure)
       {
         proxyStr += ", over-tls=true";
-        if (!tls13.is_undef())
-          proxyStr += ", tls13=" + std::string(tls13 ? "true" : "false");
       }
       else
       {
@@ -2306,8 +2304,6 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
       if (tlssecure)
       {
         proxyStr += ", over-tls=true, tls-host=" + host;
-        if (!tls13.is_undef())
-          proxyStr += ", tls13=" + std::string(tls13 ? "true" : "false");
       }
       else
       {
@@ -2322,8 +2318,6 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
         if (tlssecure)
         {
           proxyStr += ", over-tls=true, tls-host=" + host;
-          if (!tls13.is_undef())
-            proxyStr += ", tls13=" + std::string(tls13 ? "true" : "false");
         }
         else
         {
@@ -2331,10 +2325,25 @@ void proxyToQuanX(std::vector<Proxy> &nodes, INIReader &ini, std::vector<Ruleset
         }
       }
       break;
+    case ProxyType::AnyTLS:
+      proxyStr = "anytls = " + hostname + ":" + port + ", password=" + password + ", over-tls=true";
+      if (!x.SNI.empty())
+        proxyStr += ", tls-host=" + x.SNI;
+      else if (!host.empty())
+        proxyStr += ", tls-host=" + host;
+      if (!scv.is_undef())
+        proxyStr += ", tls-verification=" + scv.reverse().get_str();
+      if (!x.PublicKey.empty())
+      {
+        proxyStr += ", reality-base64-pubkey=" + x.PublicKey;
+        if (!x.ShortId.empty())
+          proxyStr += ", reality-hex-shortid=" + x.ShortId;
+      }
+      break;
     default:
       continue;
     }
-    if (!tfo.is_undef())
+    if (!tfo.is_undef() && x.PublicKey.empty())
       proxyStr += ", fast-open=" + tfo.get_str();
     if (!udp.is_undef())
       proxyStr += ", udp-relay=" + udp.get_str();
