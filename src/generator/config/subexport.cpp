@@ -292,6 +292,10 @@ void xhttpDownloadToClash(YAML::Node node, const XhttpDownloadSettings &settings
     node["x-padding-key"] = settings.XPaddingKey;
   if (!settings.XPaddingHeader.empty())
     node["x-padding-header"] = settings.XPaddingHeader;
+  if (!settings.XPaddingPlacement.empty())
+    node["x-padding-placement"] = settings.XPaddingPlacement;
+  if (!settings.XPaddingMethod.empty())
+    node["x-padding-method"] = settings.XPaddingMethod;
   if (!settings.ScMaxEachPostBytes.empty())
     node["sc-max-each-post-bytes"] = settings.ScMaxEachPostBytes;
   if (!settings.Server.empty())
@@ -327,6 +331,10 @@ void xhttpConfigToClash(YAML::Node node, const Proxy &proxy)
     node["x-padding-key"] = proxy.Xhttp.XPaddingKey;
   if (!proxy.Xhttp.XPaddingHeader.empty())
     node["x-padding-header"] = proxy.Xhttp.XPaddingHeader;
+  if (!proxy.Xhttp.XPaddingPlacement.empty())
+    node["x-padding-placement"] = proxy.Xhttp.XPaddingPlacement;
+  if (!proxy.Xhttp.XPaddingMethod.empty())
+    node["x-padding-method"] = proxy.Xhttp.XPaddingMethod;
   if (!proxy.Xhttp.ScMaxEachPostBytes.empty())
     node["sc-max-each-post-bytes"] = proxy.Xhttp.ScMaxEachPostBytes;
   if (!proxy.Xhttp.NoGrpcHeader.is_undef())
@@ -430,6 +438,10 @@ rapidjson::Value xhttpDownloadToJson(const XhttpDownloadSettings &settings, rapi
     xhttpExtra.AddMember("xPaddingKey", rapidjson::Value(settings.XPaddingKey.c_str(), allocator), allocator);
   if (!settings.XPaddingHeader.empty())
     xhttpExtra.AddMember("xPaddingHeader", rapidjson::Value(settings.XPaddingHeader.c_str(), allocator), allocator);
+  if (!settings.XPaddingPlacement.empty())
+    xhttpExtra.AddMember("xPaddingPlacement", rapidjson::Value(settings.XPaddingPlacement.c_str(), allocator), allocator);
+  if (!settings.XPaddingMethod.empty())
+    xhttpExtra.AddMember("xPaddingMethod", rapidjson::Value(settings.XPaddingMethod.c_str(), allocator), allocator);
   addStringOrNumberJsonMember(xhttpExtra, "scMaxEachPostBytes", settings.ScMaxEachPostBytes, allocator);
   if (!settings.ReuseSettings.empty())
   {
@@ -467,6 +479,10 @@ std::string buildVlessXhttpExtra(const Proxy &proxy)
     document.AddMember("xPaddingKey", rapidjson::Value(proxy.Xhttp.XPaddingKey.c_str(), allocator), allocator);
   if (!proxy.Xhttp.XPaddingHeader.empty())
     document.AddMember("xPaddingHeader", rapidjson::Value(proxy.Xhttp.XPaddingHeader.c_str(), allocator), allocator);
+  if (!proxy.Xhttp.XPaddingPlacement.empty())
+    document.AddMember("xPaddingPlacement", rapidjson::Value(proxy.Xhttp.XPaddingPlacement.c_str(), allocator), allocator);
+  if (!proxy.Xhttp.XPaddingMethod.empty())
+    document.AddMember("xPaddingMethod", rapidjson::Value(proxy.Xhttp.XPaddingMethod.c_str(), allocator), allocator);
   addStringOrNumberJsonMember(document, "scMaxEachPostBytes", proxy.Xhttp.ScMaxEachPostBytes, allocator);
   if (!proxy.Xhttp.NoGrpcHeader.is_undef())
     document.AddMember("noGRPCHeader", proxy.Xhttp.NoGrpcHeader.get(), allocator);

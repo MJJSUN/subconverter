@@ -109,6 +109,8 @@ void xhttpDownloadConstruct(const YAML::Node &node, XhttpDownloadSettings &setti
     }
     node["x-padding-key"] >>= settings.XPaddingKey;
     node["x-padding-header"] >>= settings.XPaddingHeader;
+    node["x-padding-placement"] >>= settings.XPaddingPlacement;
+    node["x-padding-method"] >>= settings.XPaddingMethod;
     node["sc-max-each-post-bytes"] >>= settings.ScMaxEachPostBytes;
     node["server"] >>= settings.Server;
     node["port"] >>= settings.Port;
@@ -136,6 +138,8 @@ void xhttpConfigConstruct(const YAML::Node &node, std::string &path, std::string
     }
     node["x-padding-key"] >>= settings.XPaddingKey;
     node["x-padding-header"] >>= settings.XPaddingHeader;
+    node["x-padding-placement"] >>= settings.XPaddingPlacement;
+    node["x-padding-method"] >>= settings.XPaddingMethod;
     node["sc-max-each-post-bytes"] >>= settings.ScMaxEachPostBytes;
     if (node["no-grpc-header"].IsDefined() && !node["no-grpc-header"].IsNull()) {
         settings.NoGrpcHeader = safe_as<bool>(node["no-grpc-header"]);
@@ -215,6 +219,8 @@ void xhttpDownloadConstruct(const rapidjson::Value &node, XhttpDownloadSettings 
             }
             if (extra.HasMember("xPaddingKey")) extra["xPaddingKey"] >> settings.XPaddingKey;
             if (extra.HasMember("xPaddingHeader")) extra["xPaddingHeader"] >> settings.XPaddingHeader;
+            if (extra.HasMember("xPaddingPlacement")) extra["xPaddingPlacement"] >> settings.XPaddingPlacement;
+            if (extra.HasMember("xPaddingMethod")) extra["xPaddingMethod"] >> settings.XPaddingMethod;
             if (extra.HasMember("scMaxEachPostBytes")) extra["scMaxEachPostBytes"] >> settings.ScMaxEachPostBytes;
             if (extra.HasMember("xmux") && extra["xmux"].IsObject()) {
                 xhttpReuseConstruct(extra["xmux"], settings.ReuseSettings);
@@ -249,6 +255,8 @@ void xhttpExtraConstruct(const std::string &extra, XhttpConfig &settings) {
     }
     if (document.HasMember("xPaddingKey")) document["xPaddingKey"] >> settings.XPaddingKey;
     if (document.HasMember("xPaddingHeader")) document["xPaddingHeader"] >> settings.XPaddingHeader;
+    if (document.HasMember("xPaddingPlacement")) document["xPaddingPlacement"] >> settings.XPaddingPlacement;
+    if (document.HasMember("xPaddingMethod")) document["xPaddingMethod"] >> settings.XPaddingMethod;
     if (document.HasMember("scMaxEachPostBytes")) document["scMaxEachPostBytes"] >> settings.ScMaxEachPostBytes;
     if (document.HasMember("noGRPCHeader")) {
         std::string value;
