@@ -27,6 +27,9 @@ struct XhttpDownloadSettings {
     String Path;
     String Host;
     String XPaddingBytes;
+    tribool XPaddingObfsMode;
+    String XPaddingKey;
+    String XPaddingHeader;
     String ScMaxEachPostBytes;
     XhttpReuseSettings ReuseSettings;
     String Server;
@@ -37,7 +40,8 @@ struct XhttpDownloadSettings {
     StringArray AlpnList;
 
     bool empty() const {
-        return Path.empty() && Host.empty() && XPaddingBytes.empty() && ScMaxEachPostBytes.empty() &&
+        return Path.empty() && Host.empty() && XPaddingBytes.empty() && XPaddingObfsMode.is_undef() &&
+               XPaddingKey.empty() && XPaddingHeader.empty() && ScMaxEachPostBytes.empty() &&
                ReuseSettings.empty() && Server.empty() && Port == 0 && TLS.is_undef() &&
                ServerName.empty() && Fingerprint.empty() && AlpnList.empty();
     }
@@ -47,12 +51,16 @@ struct XhttpConfig {
     std::map<String, String> Headers;
     tribool NoGrpcHeader;
     String XPaddingBytes;
+    tribool XPaddingObfsMode;
+    String XPaddingKey;
+    String XPaddingHeader;
     String ScMaxEachPostBytes;
     XhttpReuseSettings ReuseSettings;
     XhttpDownloadSettings DownloadSettings;
 
     bool empty() const {
         return Headers.empty() && NoGrpcHeader.is_undef() && XPaddingBytes.empty() &&
+               XPaddingObfsMode.is_undef() && XPaddingKey.empty() && XPaddingHeader.empty() &&
                ScMaxEachPostBytes.empty() && ReuseSettings.empty() && DownloadSettings.empty();
     }
 };

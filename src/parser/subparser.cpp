@@ -104,6 +104,11 @@ void xhttpDownloadConstruct(const YAML::Node &node, XhttpDownloadSettings &setti
     node["path"] >>= settings.Path;
     node["host"] >>= settings.Host;
     node["x-padding-bytes"] >>= settings.XPaddingBytes;
+    if (node["x-padding-obfs-mode"].IsDefined() && !node["x-padding-obfs-mode"].IsNull()) {
+        settings.XPaddingObfsMode = safe_as<bool>(node["x-padding-obfs-mode"]);
+    }
+    node["x-padding-key"] >>= settings.XPaddingKey;
+    node["x-padding-header"] >>= settings.XPaddingHeader;
     node["sc-max-each-post-bytes"] >>= settings.ScMaxEachPostBytes;
     node["server"] >>= settings.Server;
     node["port"] >>= settings.Port;
@@ -126,6 +131,11 @@ void xhttpConfigConstruct(const YAML::Node &node, std::string &path, std::string
     node["host"] >>= host;
     node["mode"] >>= mode;
     node["x-padding-bytes"] >>= settings.XPaddingBytes;
+    if (node["x-padding-obfs-mode"].IsDefined() && !node["x-padding-obfs-mode"].IsNull()) {
+        settings.XPaddingObfsMode = safe_as<bool>(node["x-padding-obfs-mode"]);
+    }
+    node["x-padding-key"] >>= settings.XPaddingKey;
+    node["x-padding-header"] >>= settings.XPaddingHeader;
     node["sc-max-each-post-bytes"] >>= settings.ScMaxEachPostBytes;
     if (node["no-grpc-header"].IsDefined() && !node["no-grpc-header"].IsNull()) {
         settings.NoGrpcHeader = safe_as<bool>(node["no-grpc-header"]);
@@ -198,6 +208,13 @@ void xhttpDownloadConstruct(const rapidjson::Value &node, XhttpDownloadSettings 
         if (xhttpSettings.HasMember("extra") && xhttpSettings["extra"].IsObject()) {
             const auto &extra = xhttpSettings["extra"];
             if (extra.HasMember("xPaddingBytes")) extra["xPaddingBytes"] >> settings.XPaddingBytes;
+            if (extra.HasMember("xPaddingObfsMode")) {
+                std::string value;
+                extra["xPaddingObfsMode"] >> value;
+                settings.XPaddingObfsMode = tribool(value);
+            }
+            if (extra.HasMember("xPaddingKey")) extra["xPaddingKey"] >> settings.XPaddingKey;
+            if (extra.HasMember("xPaddingHeader")) extra["xPaddingHeader"] >> settings.XPaddingHeader;
             if (extra.HasMember("scMaxEachPostBytes")) extra["scMaxEachPostBytes"] >> settings.ScMaxEachPostBytes;
             if (extra.HasMember("xmux") && extra["xmux"].IsObject()) {
                 xhttpReuseConstruct(extra["xmux"], settings.ReuseSettings);
@@ -225,6 +242,13 @@ void xhttpExtraConstruct(const std::string &extra, XhttpConfig &settings) {
         }
     }
     if (document.HasMember("xPaddingBytes")) document["xPaddingBytes"] >> settings.XPaddingBytes;
+    if (document.HasMember("xPaddingObfsMode")) {
+        std::string value;
+        document["xPaddingObfsMode"] >> value;
+        settings.XPaddingObfsMode = tribool(value);
+    }
+    if (document.HasMember("xPaddingKey")) document["xPaddingKey"] >> settings.XPaddingKey;
+    if (document.HasMember("xPaddingHeader")) document["xPaddingHeader"] >> settings.XPaddingHeader;
     if (document.HasMember("scMaxEachPostBytes")) document["scMaxEachPostBytes"] >> settings.ScMaxEachPostBytes;
     if (document.HasMember("noGRPCHeader")) {
         std::string value;
