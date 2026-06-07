@@ -208,6 +208,9 @@ struct Proxy {
     String UnderlyingProxy;
     std::vector<String> AlpnList;
     String PacketEncoding;
+    String Ech;
+    String ClashEchConfig;
+    String ClashEchQueryServerName;
     String Multiplexing;
     tribool V2rayHttpUpgrade;
 };

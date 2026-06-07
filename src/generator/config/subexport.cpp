@@ -963,6 +963,15 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
       {
         singleproxy["packet-encoding"] = x.PacketEncoding;
       }
+      if (!x.ClashEchConfig.empty())
+      {
+        singleproxy["ech-opts"]["enable"] = true;
+        singleproxy["ech-opts"]["config"] = x.ClashEchConfig;
+        if (!x.ClashEchQueryServerName.empty())
+        {
+          singleproxy["ech-opts"]["query-server-name"] = x.ClashEchQueryServerName;
+        }
+      }
       if (!x.Flow.empty())
         singleproxy["flow"] = x.Flow;
       if (!scv.is_undef())
@@ -1747,6 +1756,10 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
       if (!packet_encoding.empty())
       {
         params += (params.empty() ? "?" : "&") + std::string("packet-encoding=") + packet_encoding;
+      }
+      if (!x.Ech.empty())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("ech=") + urlEncode(x.Ech);
       }
       if (!alpns.empty())
       {
