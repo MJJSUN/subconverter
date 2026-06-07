@@ -1433,7 +1433,7 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
     for (uint32_t i = 0; i < yamlnode[section].size(); i++) {
         std::string proxytype, ps, server, port, cipher, group, password = "", ports, tempPassword; //common
         std::string type = "none", id, aid = "0", net = "tcp", path, host, edge, tls, sni; //vmess
-        std::string fp = "chrome", pbk, sid, packet_encoding, clash_ech_config, clash_ech_query_server_name; //vless
+        std::string fp = "chrome", pbk, sid, packet_encoding, ech, clash_ech_config, clash_ech_query_server_name; //vless
         std::string plugin, pluginopts, pluginopts_mode, pluginopts_host, pluginopts_mux; //ss
         std::string protocol, protoparam, obfs, obfsparam; //ssr
         std::string flow, mode; //trojan
@@ -1758,12 +1758,15 @@ void explodeClash(Node yamlnode, std::vector<Proxy> &nodes) {
                 if (singleproxy["ech-opts"].IsDefined()) {
                     singleproxy["ech-opts"]["config"] >>= clash_ech_config;
                     singleproxy["ech-opts"]["query-server-name"] >>= clash_ech_query_server_name;
+                    if (safe_as<bool>(singleproxy["ech-opts"]["enable"])) {
+                        ech = clash_ech_config;
+                    }
                 }
                 cipher = singleproxy["encryption"].IsDefined() ? safe_as<std::string>(singleproxy["encryption"]) : "";
                 bool vless_udp;
                 singleproxy["udp"] >> vless_udp;
                 vlessConstruct(node, XRAY_DEFAULT_GROUP, ps, server, port, type, id, aid, net, cipher, flow, mode, path,
-                               host, "", tls, pbk, sid, fp, sni, alpnList, packet_encoding, "", clash_ech_config,
+                               host, "", tls, pbk, sid, fp, sni, alpnList, packet_encoding, ech, clash_ech_config,
                                clash_ech_query_server_name, udp, tribool(), tribool(),
                                tribool(), "", v2ray_http_upgrade);
                 break;
