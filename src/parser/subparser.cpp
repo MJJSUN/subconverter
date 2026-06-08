@@ -2918,7 +2918,7 @@ bool explodeSurge(std::string surge, std::vector<Proxy> &nodes) {
                             remarks = server + ":" + port;
                         vlessConstruct(node, XRAY_DEFAULT_GROUP, remarks, server, port, "", id, aead, net, method,
                                        "chrome", "", path, host, "",
-                                       tls, "", "", fp, sni, std::vector<std::string>{}, "", "", "", "",
+                                       tls, "", "", fp, sni, std::vector<std::string>{}, "", "", "", "", "",
                                        udp, tfo, scv, tls13);
                         break;
                     case "trojan"_hash: //quantumult x style trojan link

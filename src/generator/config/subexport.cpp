@@ -944,6 +944,7 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
       }
       break;
     case ProxyType::VLESS:
+    {
       singleproxy["type"] = "vless";
       singleproxy["uuid"] = x.UserId;
       singleproxy["encryption"] = x.EncryptMethod.empty() ? "" : x.EncryptMethod;
@@ -1066,6 +1067,7 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
         continue;
       }
       break;
+    }
     default:
       continue;
     }
