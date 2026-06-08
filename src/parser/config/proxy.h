@@ -210,6 +210,7 @@ struct Proxy {
     String PacketEncoding;
     String Ech;
     String ClashEchConfig;
+    String ClashEchDnsServer;
     String ClashEchQueryServerName;
     String Multiplexing;
     tribool V2rayHttpUpgrade;

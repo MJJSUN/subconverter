@@ -963,10 +963,26 @@ void proxyToClash(std::vector<Proxy> &nodes, YAML::Node &yamlnode, const ProxyGr
       {
         singleproxy["packet-encoding"] = x.PacketEncoding;
       }
+      std::string clashEchConfig;
       if (!x.ClashEchConfig.empty())
       {
+        clashEchConfig = x.ClashEchConfig;
+      }
+      else if (x.ClashEchDnsServer.empty())
+      {
+        clashEchConfig = x.Ech;
+      }
+      if (!clashEchConfig.empty() || !x.ClashEchDnsServer.empty() || !x.ClashEchQueryServerName.empty())
+      {
         singleproxy["ech-opts"]["enable"] = true;
-        singleproxy["ech-opts"]["config"] = x.ClashEchConfig;
+        if (!clashEchConfig.empty())
+        {
+          singleproxy["ech-opts"]["config"] = clashEchConfig;
+        }
+        if (!x.ClashEchDnsServer.empty())
+        {
+          singleproxy["ech-opts"]["dns-server"] = x.ClashEchDnsServer;
+        }
         if (!x.ClashEchQueryServerName.empty())
         {
           singleproxy["ech-opts"]["query-server-name"] = x.ClashEchQueryServerName;
@@ -1760,6 +1776,18 @@ std::string proxyToSingle(std::vector<Proxy> &nodes, int types, extra_settings &
       if (!x.Ech.empty())
       {
         params += (params.empty() ? "?" : "&") + std::string("ech=") + urlEncode(x.Ech);
+      }
+      if (!x.ClashEchConfig.empty())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("clashEchConfig=") + urlEncode(x.ClashEchConfig);
+      }
+      if (!x.ClashEchDnsServer.empty())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("clashEchDnsServer=") + urlEncode(x.ClashEchDnsServer);
+      }
+      if (!x.ClashEchQueryServerName.empty())
+      {
+        params += (params.empty() ? "?" : "&") + std::string("clashEchQueryServerName=") + urlEncode(x.ClashEchQueryServerName);
       }
       if (!alpns.empty())
       {
